@@ -1,0 +1,48 @@
+{
+  "name": "recall-recorder",
+  "productName": "Recall Recorder",
+  "version": "1.0.0",
+  "description": "Desktop recording SDK for call transcription",
+  "main": ".webpack/main",
+  "private": true,
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "keywords": [],
+  "author": {
+    "name": "dhpwd",
+    "email": "1770050+dhpwd@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/maker-deb": "^7.11.1",
+    "@electron-forge/maker-rpm": "^7.11.1",
+    "@electron-forge/maker-squirrel": "^7.11.1",
+    "@electron-forge/maker-zip": "^7.11.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
+    "@electron-forge/plugin-fuses": "^7.11.1",
+    "@electron-forge/plugin-webpack": "^7.11.1",
+    "@electron/fuses": "^1.8.0",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "copy-webpack-plugin": "^13.0.1",
+    "css-loader": "^6.11.0",
+    "electron": "40.2.1",
+    "node-loader": "^2.1.0",
+    "style-loader": "^3.3.4"
+  },
+  "dependencies": {
+    "@recallai/desktop-sdk": "^2.0.4",
+    "dotenv": "^17.2.4",
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "overrides": {
+    "@electron/packager": {
+      "@electron/osx-sign": "github:recallai/osx-sign"
+    }
+  }
+}

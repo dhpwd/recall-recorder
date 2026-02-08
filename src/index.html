@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Recall Recorder – Preferences</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Preferences</h1>
+
+      <div class="field">
+        <label for="inboxFolder">Transcript inbox folder</label>
+        <div class="folder-row">
+          <input type="text" id="inboxFolder" readonly />
+          <button id="browseBtn" type="button">Browse...</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="toggle-label">
+          <input type="checkbox" id="autoRecord" />
+          <span>Auto-record when meeting detected</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="saveBtn" type="button">Save</button>
+        <span id="saveStatus" class="status-msg"></span>
+      </div>
+    </div>
+  </body>
+</html>
