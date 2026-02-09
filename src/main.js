@@ -15,7 +15,7 @@ let mainWindow = null;
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 480,
-    height: 360,
+    height: 420,
     show: false,
     resizable: false,
     title: "Recall Recorder – Preferences",

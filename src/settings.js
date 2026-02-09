@@ -7,7 +7,12 @@ const SETTINGS_FILE = path.join(app.getPath("userData"), "settings.json");
 const DEFAULTS = {
   inboxFolder: path.join(app.getPath("home"), "call-transcripts", "inbox"),
   autoRecord: true,
+  recallApiKey: "",
 };
+
+function getApiKey(settings) {
+  return settings.recallApiKey || process.env.RECALL_API_KEY || "";
+}
 
 function load() {
   try {
@@ -34,4 +39,4 @@ function ensureInboxFolder(settings) {
   return folder;
 }
 
-module.exports = { load, save, ensureInboxFolder, DEFAULTS };
+module.exports = { load, save, ensureInboxFolder, getApiKey, DEFAULTS };

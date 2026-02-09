@@ -1,5 +1,6 @@
 const RecallAiSdk = require("@recallai/desktop-sdk").default;
 const { saveTranscript } = require("./transcript");
+const { getApiKey } = require("./settings");
 
 const API_BASE = "https://eu-central-1.recall.ai";
 let currentRecording = null;
@@ -11,7 +12,7 @@ async function init({ onStateChange, settingsLoader }) {
   getSettings = settingsLoader;
 
   console.log("[recall] Initialising SDK...");
-  console.log("[recall] API key present:", !!process.env.RECALL_API_KEY);
+  console.log("[recall] API key present:", !!getApiKey(getSettings()));
 
   try {
     RecallAiSdk.init({ api_url: API_BASE });
@@ -68,7 +69,7 @@ async function handleMeetingDetected(evt) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${process.env.RECALL_API_KEY}`,
+        Authorization: `Token ${getApiKey(getSettings())}`,
       },
       body: JSON.stringify({ meeting_title: meetingTitle }),
     });
@@ -140,7 +141,7 @@ async function pollForTranscript(uploadId) {
   let recordingId = null;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const res = await fetch(`${API_BASE}/api/v1/sdk_upload/${uploadId}/`, {
-      headers: { Authorization: `Token ${process.env.RECALL_API_KEY}` },
+      headers: { Authorization: `Token ${getApiKey(getSettings())}` },
     });
 
     if (!res.ok) {
@@ -197,7 +198,7 @@ async function createTranscript(recordingId) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${process.env.RECALL_API_KEY}`,
+        Authorization: `Token ${getApiKey(getSettings())}`,
       },
       body: JSON.stringify({
         provider: {
@@ -223,7 +224,7 @@ async function createTranscript(recordingId) {
 
 async function fetchTranscript(recordingId) {
   const res = await fetch(`${API_BASE}/api/v1/recording/${recordingId}/`, {
-    headers: { Authorization: `Token ${process.env.RECALL_API_KEY}` },
+    headers: { Authorization: `Token ${getApiKey(getSettings())}` },
   });
 
   if (!res.ok) {

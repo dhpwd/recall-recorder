@@ -3,8 +3,14 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 
 module.exports = {
   packagerConfig: {
+    appBundleId: "com.fidero.recall-recorder",
     asar: {
-      unpack: "{**/desktop_sdk_macos_exe,**/Frameworks/**}",
+      unpackDir: ".webpack/main",
+    },
+    osxSign: {
+      identity: "-",
+      entitlements: "./entitlements.plist",
+      "entitlements-inherit": "./entitlements.plist",
     },
   },
   rebuildConfig: {},

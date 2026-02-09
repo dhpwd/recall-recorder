@@ -1,5 +1,6 @@
 import "./index.css";
 
+const recallApiKeyInput = document.getElementById("recallApiKey");
 const inboxFolderInput = document.getElementById("inboxFolder");
 const browseBtn = document.getElementById("browseBtn");
 const autoRecordCheckbox = document.getElementById("autoRecord");
@@ -8,6 +9,7 @@ const saveStatus = document.getElementById("saveStatus");
 
 async function loadSettings() {
   const settings = await window.api.getSettings();
+  recallApiKeyInput.value = settings.recallApiKey || "";
   inboxFolderInput.value = settings.inboxFolder || "";
   autoRecordCheckbox.checked = settings.autoRecord !== false;
 }
@@ -21,6 +23,7 @@ browseBtn.addEventListener("click", async () => {
 
 saveBtn.addEventListener("click", async () => {
   await window.api.saveSettings({
+    recallApiKey: recallApiKeyInput.value,
     inboxFolder: inboxFolderInput.value,
     autoRecord: autoRecordCheckbox.checked,
   });
