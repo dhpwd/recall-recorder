@@ -203,7 +203,7 @@ async function createTranscript(recordingId) {
         provider: {
           assembly_ai_async: {
             speech_models: ["universal-3-pro"],
-            language_code: "en",
+            language_code: "en_uk",
           },
         },
         diarization: {
