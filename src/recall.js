@@ -15,7 +15,7 @@ async function init({ onStateChange, settingsLoader }) {
   console.log("[recall] API key present:", !!getApiKey(getSettings()));
 
   try {
-    RecallAiSdk.init({ api_url: API_BASE });
+    RecallAiSdk.init({ api_url: API_BASE, acquirePermissionsOnStartup: [] });
     console.log("[recall] SDK init succeeded");
   } catch (err) {
     console.error("[recall] Failed to initialise Recall SDK:", err);
@@ -41,8 +41,6 @@ async function init({ onStateChange, settingsLoader }) {
   });
 
   try {
-    await RecallAiSdk.requestPermission("accessibility");
-    console.log("[recall] Accessibility permission requested");
     await RecallAiSdk.requestPermission("microphone");
     console.log("[recall] Microphone permission requested");
     await RecallAiSdk.requestPermission("screen-capture");
@@ -246,9 +244,26 @@ async function fetchTranscript(recordingId) {
   return null;
 }
 
-function stopRecording() {
-  if (currentRecording) {
-    RecallAiSdk.stopRecording();
+async function stopRecording() {
+  if (!currentRecording) return;
+
+  const { windowId } = currentRecording;
+  try {
+    await RecallAiSdk.stopRecording({ windowId });
+    console.log("[recall] Recording stopped for window:", windowId);
+  } catch (err) {
+    console.error("[recall] stopRecording failed:", err.message);
+    console.log("[recall] Attempting SDK shutdown as fallback...");
+    try {
+      await RecallAiSdk.shutdown();
+      await RecallAiSdk.init({ api_url: API_BASE });
+      console.log("[recall] SDK restarted after fallback shutdown");
+    } catch (shutdownErr) {
+      console.error(
+        "[recall] SDK shutdown fallback failed:",
+        shutdownErr.message,
+      );
+    }
   }
 }
 
