@@ -14,7 +14,9 @@
 
 ## Known issues
 
-- Speaker names appear as "Speaker 0", "Speaker 1" rather than real names – needs validation with a multi-person call
+- Speaker name edge cases in `transcript.js` (real-name resolution itself works correctly for the major platforms):
+  - Duplicate display names collapse – `participants` is a Set keyed on the display string rather than `participant.id`, so two 'Dan's render as one participant and are indistinguishable in the body
+  - Participants with no `name` (e.g. PSTN dial-ins) fall back to `Speaker <id>`, producing mixed naming in the frontmatter list
 - No error resilience for interrupted polling (app quit mid-processing loses the transcript). Manual recovery possible via `recover-transcript.js` – the gap is in the app itself
 - No persistent logging in the packaged app – `console.log` output is lost
 - No auto-launch on login
