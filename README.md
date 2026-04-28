@@ -30,3 +30,7 @@ cp -R "out/Recall Recorder-darwin-arm64/Recall Recorder.app" /Applications/
 ```
 
 The packaged app reads the API key from Preferences (tray menu → Preferences) rather than `.env`.
+
+## License
+
+MIT – see [LICENSE](LICENSE).
