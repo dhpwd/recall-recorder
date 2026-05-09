@@ -4,38 +4,47 @@ const path = require("node:path");
 
 const SETTINGS_FILE = path.join(app.getPath("userData"), "settings.json");
 
+const FALLBACK_MAX_DURATION_MINUTES = 60;
+const FALLBACK_SHORTCUT = "Command+Option+R";
+
 const DEFAULTS = {
   inboxFolder: path.join(app.getPath("home"), "call-transcripts", "inbox"),
   autoRecord: true,
   recallApiKey: "",
   assemblyAiApiKey: "",
-  inPersonMaxDurationMinutes: 60,
-  inPersonShortcut: "Command+Option+R",
+  inPersonMaxDurationMinutes: null,
+  inPersonShortcut: "",
 };
+
+// Resolution order across all getters: settings (UI) > env > built-in fallback.
+// Stored defaults are deliberately falsy so env vars and runtime fallbacks
+// can shine through when the user hasn't explicitly chosen a value.
 
 function getApiKey(settings) {
   return settings.recallApiKey || process.env.RECALL_API_KEY || "";
 }
 
 function getAssemblyAiKey(settings) {
-  return (
-    settings.assemblyAiApiKey || process.env.ASSEMBLYAI_API_KEY || ""
-  );
+  return settings.assemblyAiApiKey || process.env.ASSEMBLYAI_API_KEY || "";
 }
 
 function getInPersonMaxMinutes(settings) {
-  const fromEnv = Number(process.env.IN_PERSON_MAX_DURATION_MINUTES);
-  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
-  const fromSettings = Number(settings.inPersonMaxDurationMinutes);
-  if (Number.isFinite(fromSettings) && fromSettings > 0) return fromSettings;
-  return DEFAULTS.inPersonMaxDurationMinutes;
+  const candidates = [
+    settings.inPersonMaxDurationMinutes,
+    process.env.IN_PERSON_MAX_DURATION_MINUTES,
+  ];
+  for (const c of candidates) {
+    const n = Number(c);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return FALLBACK_MAX_DURATION_MINUTES;
 }
 
 function getInPersonShortcut(settings) {
   return (
-    process.env.IN_PERSON_SHORTCUT ||
     settings.inPersonShortcut ||
-    DEFAULTS.inPersonShortcut
+    process.env.IN_PERSON_SHORTCUT ||
+    FALLBACK_SHORTCUT
   );
 }
 

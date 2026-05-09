@@ -5,6 +5,10 @@ const path = require("node:path");
 const settings = require("./settings");
 const { saveTranscript } = require("./transcript");
 const { transcribeFile } = require("./assemblyai");
+const { STATES, INPERSON_CHANNELS } = require("./constants");
+
+const MEETING_TITLE = "In-Person Meeting";
+const TMP_DIR = path.join(os.tmpdir(), "recall-recorder");
 
 let recorderWin = null;
 let indicatorWin = null;
@@ -12,35 +16,43 @@ let current = null;
 let stateCallback = null;
 let stopTimer = null;
 let tickTimer = null;
-let pendingStart = false;
 
 function init({ onStateChange }) {
   stateCallback = onStateChange;
+  cleanupTmpFiles();
 
-  ipcMain.on("inperson-recorder-ready", () => {
-    if (pendingStart && recorderWin && !recorderWin.isDestroyed()) {
-      pendingStart = false;
-      recorderWin.webContents.send("inperson-start");
-    }
-  });
-
-  ipcMain.on("inperson-chunk", (_e, buffer) => {
+  ipcMain.on(INPERSON_CHANNELS.CHUNK, (_e, buffer) => {
     if (current?.writeStream) {
       current.writeStream.write(Buffer.from(buffer));
     }
   });
 
-  ipcMain.on("inperson-recorder-error", (_e, message) => {
+  ipcMain.on(INPERSON_CHANNELS.ERROR, (_e, message) => {
     console.error("[inperson] recorder error:", message);
-    stateCallback?.("error", `In-person recorder failed: ${message}`);
+    stateCallback?.(STATES.ERROR, `In-person recorder failed: ${message}`);
     cleanupActive();
   });
 
-  ipcMain.on("inperson-recorder-stopped", () => {
+  ipcMain.on(INPERSON_CHANNELS.STOPPED, () => {
     finalize().catch((err) => {
       console.error("[inperson] finalize threw:", err);
     });
   });
+}
+
+function cleanupTmpFiles() {
+  try {
+    if (!fs.existsSync(TMP_DIR)) return;
+    for (const entry of fs.readdirSync(TMP_DIR, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.startsWith("inperson-")) {
+        try {
+          fs.unlinkSync(path.join(TMP_DIR, entry.name));
+        } catch {}
+      }
+    }
+  } catch (err) {
+    console.warn("[inperson] tmp cleanup failed:", err.message);
+  }
 }
 
 async function start() {
@@ -48,7 +60,7 @@ async function start() {
 
   const recall = require("./recall");
   if (recall.isRecording()) {
-    stateCallback?.("error", "A meeting recording is already active");
+    stateCallback?.(STATES.ERROR, "A meeting recording is already active");
     return { ok: false, reason: "recall-active" };
   }
 
@@ -56,37 +68,34 @@ async function start() {
   const apiKey = settings.getAssemblyAiKey(s);
   if (!apiKey) {
     stateCallback?.(
-      "error",
+      STATES.ERROR,
       "Set ASSEMBLYAI_API_KEY (env or Preferences) first",
     );
     return { ok: false, reason: "no-key" };
   }
 
-  const tmpDir = path.join(os.tmpdir(), "recall-recorder");
-  fs.mkdirSync(tmpDir, { recursive: true });
-  const audioFile = path.join(tmpDir, `inperson-${Date.now()}.webm`);
+  fs.mkdirSync(TMP_DIR, { recursive: true });
+  const audioFile = path.join(TMP_DIR, `inperson-${Date.now()}.webm`);
   const writeStream = fs.createWriteStream(audioFile);
 
   current = {
     startTime: new Date(),
     audioFile,
     writeStream,
-    meetingTitle: "In-Person Meeting",
+    meetingTitle: MEETING_TITLE,
   };
 
   ensureRecorderWindow();
-  showIndicator();
+  showIndicator(settings.getInPersonShortcut(s));
   startTimers(s);
 
-  stateCallback?.("inperson-recording", current.meetingTitle);
+  stateCallback?.(STATES.INPERSON_RECORDING, current.meetingTitle);
   return { ok: true };
 }
 
 function ensureRecorderWindow() {
-  pendingStart = true;
   if (recorderWin && !recorderWin.isDestroyed()) {
-    recorderWin.webContents.send("inperson-start");
-    pendingStart = false;
+    sendTo(recorderWin, INPERSON_CHANNELS.START);
     return;
   }
   recorderWin = new BrowserWindow({
@@ -97,9 +106,23 @@ function ensureRecorderWindow() {
     },
   });
   recorderWin.loadURL(RECORDER_WINDOW_WEBPACK_ENTRY);
+  sendTo(recorderWin, INPERSON_CHANNELS.START);
 }
 
-function showIndicator() {
+function sendTo(win, channel, payload) {
+  if (!win || win.isDestroyed()) return;
+  const wc = win.webContents;
+  if (!wc || wc.isDestroyed()) return;
+  if (wc.isLoading()) {
+    wc.once("did-finish-load", () => {
+      if (!wc.isDestroyed()) wc.send(channel, payload);
+    });
+  } else {
+    wc.send(channel, payload);
+  }
+}
+
+function showIndicator(shortcut) {
   const display = screen.getPrimaryDisplay();
   const w = 240;
   const h = 56;
@@ -108,6 +131,7 @@ function showIndicator() {
 
   if (indicatorWin && !indicatorWin.isDestroyed()) {
     indicatorWin.setBounds({ x, y, width: w, height: h });
+    sendTo(indicatorWin, INPERSON_CHANNELS.HINT, formatAccelerator(shortcut));
     indicatorWin.showInactive();
     return;
   }
@@ -134,7 +158,32 @@ function showIndicator() {
   indicatorWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   indicatorWin.setIgnoreMouseEvents(true);
   indicatorWin.loadURL(INDICATOR_WINDOW_WEBPACK_ENTRY);
-  indicatorWin.once("ready-to-show", () => indicatorWin.showInactive());
+  indicatorWin.once("ready-to-show", () => {
+    sendTo(indicatorWin, INPERSON_CHANNELS.HINT, formatAccelerator(shortcut));
+    indicatorWin.showInactive();
+  });
+}
+
+function formatAccelerator(acc) {
+  if (!acc) return "";
+  return acc
+    .split("+")
+    .map((part) => {
+      const lower = part.toLowerCase();
+      if (
+        lower === "command" ||
+        lower === "cmd" ||
+        lower === "commandorcontrol" ||
+        lower === "cmdorctrl"
+      ) {
+        return "⌘";
+      }
+      if (lower === "control" || lower === "ctrl") return "⌃";
+      if (lower === "option" || lower === "alt") return "⌥";
+      if (lower === "shift") return "⇧";
+      return part.length === 1 ? part.toUpperCase() : part;
+    })
+    .join("");
 }
 
 function hideIndicator() {
@@ -156,11 +205,11 @@ function startTimers(s) {
   }
 
   tickTimer = setInterval(() => {
-    if (!current || !indicatorWin || indicatorWin.isDestroyed()) return;
+    if (!current) return;
     const elapsed = Math.floor(
       (Date.now() - current.startTime.getTime()) / 1000,
     );
-    indicatorWin.webContents.send("inperson-tick", elapsed);
+    sendTo(indicatorWin, INPERSON_CHANNELS.TICK, elapsed);
   }, 1000);
 }
 
@@ -192,7 +241,7 @@ function cleanupActive() {
 function stop() {
   if (!current) return;
   if (recorderWin && !recorderWin.isDestroyed()) {
-    recorderWin.webContents.send("inperson-stop");
+    sendTo(recorderWin, INPERSON_CHANNELS.STOP);
   } else {
     finalize().catch((err) => console.error("[inperson] finalize threw:", err));
   }
@@ -208,7 +257,7 @@ async function finalize() {
 
   await new Promise((resolve) => recording.writeStream.end(resolve));
 
-  stateCallback?.("inperson-processing");
+  stateCallback?.(STATES.INPERSON_PROCESSING);
 
   try {
     const s = settings.load();
@@ -224,20 +273,29 @@ async function finalize() {
       },
       segments,
     );
-    stateCallback?.("inperson-transcript-ready", filename);
+    stateCallback?.(STATES.INPERSON_TRANSCRIPT_READY, filename);
   } catch (err) {
     console.error("[inperson] transcription failed:", err);
-    stateCallback?.("error", `In-person transcription failed: ${err.message}`);
+    stateCallback?.(
+      STATES.ERROR,
+      `In-person transcription failed: ${err.message}`,
+    );
   } finally {
     try {
       fs.unlinkSync(recording.audioFile);
     } catch {}
-    if (!current) stateCallback?.("idle");
   }
 }
 
 function isRecording() {
   return current !== null;
+}
+
+function getRecorderWebContentsId() {
+  if (!recorderWin || recorderWin.isDestroyed()) return null;
+  const wc = recorderWin.webContents;
+  if (!wc || wc.isDestroyed()) return null;
+  return wc.id;
 }
 
 async function toggle() {
@@ -249,4 +307,11 @@ async function toggle() {
   return { ...result, action: "start" };
 }
 
-module.exports = { init, start, stop, toggle, isRecording };
+module.exports = {
+  init,
+  start,
+  stop,
+  toggle,
+  isRecording,
+  getRecorderWebContentsId,
+};

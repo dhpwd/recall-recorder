@@ -1,10 +1,10 @@
 const { contextBridge, ipcRenderer } = require("electron");
+const { INPERSON_CHANNELS } = require("./constants");
 
 contextBridge.exposeInMainWorld("recorder", {
-  ready: () => ipcRenderer.send("inperson-recorder-ready"),
-  chunk: (buf) => ipcRenderer.send("inperson-chunk", buf),
-  stopped: () => ipcRenderer.send("inperson-recorder-stopped"),
-  error: (msg) => ipcRenderer.send("inperson-recorder-error", msg),
-  onStart: (cb) => ipcRenderer.on("inperson-start", () => cb()),
-  onStop: (cb) => ipcRenderer.on("inperson-stop", () => cb()),
+  chunk: (buf) => ipcRenderer.send(INPERSON_CHANNELS.CHUNK, buf),
+  stopped: () => ipcRenderer.send(INPERSON_CHANNELS.STOPPED),
+  error: (msg) => ipcRenderer.send(INPERSON_CHANNELS.ERROR, msg),
+  onStart: (cb) => ipcRenderer.on(INPERSON_CHANNELS.START, () => cb()),
+  onStop: (cb) => ipcRenderer.on(INPERSON_CHANNELS.STOP, () => cb()),
 });

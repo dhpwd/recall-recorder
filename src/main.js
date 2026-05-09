@@ -100,9 +100,16 @@ function registerInPersonShortcut() {
 }
 
 app.whenReady().then(() => {
+  // Only auto-grant the mic to the in-person recorder window. Every other
+  // webContents has to fall through to a default deny.
   session.defaultSession.setPermissionRequestHandler(
-    (_webContents, permission, callback) => {
-      if (permission === "media") return callback(true);
+    (webContents, permission, callback) => {
+      if (
+        permission === "media" &&
+        webContents.id === inperson.getRecorderWebContentsId()
+      ) {
+        return callback(true);
+      }
       callback(false);
     },
   );

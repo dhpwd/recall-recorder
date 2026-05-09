@@ -40,5 +40,3 @@ window.recorder.onStop(() => {
     window.recorder.stopped();
   }
 });
-
-window.recorder.ready();

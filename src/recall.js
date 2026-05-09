@@ -1,6 +1,7 @@
 const RecallAiSdk = require("@recallai/desktop-sdk").default;
 const { saveTranscript } = require("./transcript");
 const { getApiKey } = require("./settings");
+const { LANGUAGE_CODE, STATES } = require("./constants");
 
 const API_BASE = "https://eu-central-1.recall.ai";
 let currentRecording = null;
@@ -19,7 +20,7 @@ async function init({ onStateChange, settingsLoader }) {
     console.log("[recall] SDK init succeeded");
   } catch (err) {
     console.error("[recall] Failed to initialise Recall SDK:", err);
-    trayCallbacks?.("error", "SDK init failed – check native binary");
+    trayCallbacks?.(STATES.ERROR, "SDK init failed – check native binary");
     return;
   }
 
@@ -30,9 +31,9 @@ async function init({ onStateChange, settingsLoader }) {
     const code = evt.sdk?.state?.code;
     console.log("[recall] SDK state change:", code);
     if (code === "recording") {
-      trayCallbacks?.("recording");
+      trayCallbacks?.(STATES.RECORDING);
     } else if (code === "idle" && !currentRecording) {
-      trayCallbacks?.("idle");
+      trayCallbacks?.(STATES.IDLE);
     }
   });
 
@@ -82,7 +83,7 @@ async function handleMeetingDetected(evt) {
     if (!res.ok) {
       const errorText = await res.text();
       console.error("Failed to create SDK upload:", res.status, errorText);
-      trayCallbacks?.("error", `Failed to create upload: ${res.status}`);
+      trayCallbacks?.(STATES.ERROR, `Failed to create upload: ${res.status}`);
       return;
     }
 
@@ -101,10 +102,10 @@ async function handleMeetingDetected(evt) {
       platform: detectPlatform(meetingTitle),
     };
 
-    trayCallbacks?.("recording", meetingTitle);
+    trayCallbacks?.(STATES.RECORDING, meetingTitle);
   } catch (err) {
     console.error("Error starting recording:", err);
-    trayCallbacks?.("error", err.message);
+    trayCallbacks?.(STATES.ERROR, err.message);
   }
 }
 
@@ -118,7 +119,7 @@ async function handleRecordingEnded() {
   const recording = { ...currentRecording };
   currentRecording = null;
 
-  trayCallbacks?.("processing");
+  trayCallbacks?.(STATES.PROCESSING);
 
   try {
     const transcriptSegments = await pollForTranscript(recording.id);
@@ -129,13 +130,13 @@ async function handleRecordingEnded() {
       transcriptSegments,
     );
 
-    trayCallbacks?.("transcript-ready", filename);
+    trayCallbacks?.(STATES.TRANSCRIPT_READY, filename);
   } catch (err) {
     console.error("Error processing transcript:", err);
-    trayCallbacks?.("error", `Transcript processing failed: ${err.message}`);
+    trayCallbacks?.(STATES.ERROR, `Transcript processing failed: ${err.message}`);
   }
 
-  trayCallbacks?.("idle");
+  trayCallbacks?.(STATES.IDLE);
 }
 
 async function pollForTranscript(uploadId) {
@@ -209,7 +210,7 @@ async function createTranscript(recordingId) {
         provider: {
           assembly_ai_async: {
             speech_models: ["universal-3-pro"],
-            language_code: "en_uk",
+            language_code: LANGUAGE_CODE,
           },
         },
         diarization: {

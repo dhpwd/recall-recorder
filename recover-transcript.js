@@ -12,6 +12,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { transformTranscript, buildFilename } = require("./src/transcript");
+const { LANGUAGE_CODE } = require("./src/constants");
 
 const API_BASE = "https://eu-central-1.recall.ai";
 const INBOX = path.join(process.env.HOME, "call-transcripts", "inbox");
@@ -111,7 +112,7 @@ async function createTranscript(recordingId) {
         provider: {
           assembly_ai_async: {
             speech_models: ["universal-3-pro"],
-            language_code: "en_uk",
+            language_code: LANGUAGE_CODE,
           },
         },
         diarization: {

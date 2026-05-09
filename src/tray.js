@@ -3,19 +3,20 @@ const path = require("node:path");
 const recall = require("./recall");
 const inperson = require("./inperson");
 const settings = require("./settings");
+const { STATES } = require("./constants");
 
 let tray = null;
 let settingsWindow = null;
-let state = "idle";
+let state = STATES.IDLE;
 let currentMeetingTitle = null;
 
 const STATUS_LABELS = {
-  idle: "Status: Idle",
-  recording: "Status: Recording",
-  processing: "Status: Processing Transcript",
-  error: "Status: Error",
-  "inperson-recording": "Status: Recording (in-person)",
-  "inperson-processing": "Status: Processing Transcript",
+  [STATES.IDLE]: "Status: Idle",
+  [STATES.RECORDING]: "Status: Recording",
+  [STATES.PROCESSING]: "Status: Processing Transcript",
+  [STATES.ERROR]: "Status: Error",
+  [STATES.INPERSON_RECORDING]: "Status: Recording (in-person)",
+  [STATES.INPERSON_PROCESSING]: "Status: Processing Transcript",
 };
 
 function create({ getWindow }) {
@@ -36,8 +37,10 @@ function create({ getWindow }) {
 }
 
 function updateMenu() {
-  const recallActive = state === "recording";
-  const inpersonActive = state === "inperson-recording";
+  const recallActive = state === STATES.RECORDING;
+  const inpersonActive = state === STATES.INPERSON_RECORDING;
+  const isProcessing =
+    state === STATES.PROCESSING || state === STATES.INPERSON_PROCESSING;
 
   let statusLabel;
   if (recallActive && currentMeetingTitle) {
@@ -45,7 +48,7 @@ function updateMenu() {
   } else if (inpersonActive) {
     statusLabel = "Recording: in-person";
   } else {
-    statusLabel = STATUS_LABELS[state] || STATUS_LABELS.idle;
+    statusLabel = STATUS_LABELS[state] || STATUS_LABELS[STATES.IDLE];
   }
 
   const accelerator = settings.getInPersonShortcut(settings.load());
@@ -62,7 +65,7 @@ function updateMenu() {
         ? "Stop In-Person Recording"
         : "Start In-Person Recording",
       accelerator,
-      enabled: inpersonActive || (!recallActive && state !== "processing"),
+      enabled: inpersonActive || (!recallActive && !isProcessing),
       click: () => inperson.toggle(),
     },
     { type: "separator" },
@@ -93,48 +96,48 @@ function updateMenu() {
 }
 
 function restingState() {
-  if (recall.isRecording()) return "recording";
-  if (inperson.isRecording()) return "inperson-recording";
-  return "idle";
+  if (recall.isRecording()) return STATES.RECORDING;
+  if (inperson.isRecording()) return STATES.INPERSON_RECORDING;
+  return STATES.IDLE;
 }
 
 function handleStateChange(newState, detail) {
   state = newState;
 
   switch (newState) {
-    case "recording":
+    case STATES.RECORDING:
       currentMeetingTitle = detail || null;
       showNotification(
         "Recording Started",
         `Recording: ${detail || "meeting"}`,
       );
       break;
-    case "processing":
+    case STATES.PROCESSING:
       currentMeetingTitle = null;
       break;
-    case "transcript-ready":
+    case STATES.TRANSCRIPT_READY:
       showNotification("Transcript Saved", detail || "Transcript ready");
       state = restingState();
       break;
-    case "inperson-recording":
+    case STATES.INPERSON_RECORDING:
       currentMeetingTitle = "in-person";
       showNotification("Recording Started", "Recording in-person meeting");
       break;
-    case "inperson-processing":
+    case STATES.INPERSON_PROCESSING:
       currentMeetingTitle = null;
       break;
-    case "inperson-transcript-ready":
+    case STATES.INPERSON_TRANSCRIPT_READY:
       showNotification(
         "Transcript Saved",
         detail || "In-person transcript ready",
       );
       state = restingState();
       break;
-    case "error":
+    case STATES.ERROR:
       showNotification("Error", detail || "An error occurred");
-      state = "idle";
+      state = restingState();
       break;
-    case "idle":
+    case STATES.IDLE:
       currentMeetingTitle = null;
       break;
   }

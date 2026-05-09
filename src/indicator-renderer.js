@@ -1,6 +1,7 @@
 import "./indicator.css";
 
 const timerEl = document.getElementById("timer");
+const hintEl = document.getElementById("hint");
 
 function format(secs) {
   const h = Math.floor(secs / 3600);
@@ -14,4 +15,8 @@ function format(secs) {
 
 window.indicator.onTick((seconds) => {
   timerEl.textContent = format(seconds);
+});
+
+window.indicator.onHint((hint) => {
+  hintEl.textContent = hint ? `${hint} stop` : "";
 });

@@ -1,17 +1,20 @@
 const fs = require("node:fs");
+const { LANGUAGE_CODE } = require("./constants");
 
 const BASE = "https://api.assemblyai.com/v2";
-const LANGUAGE_CODE = "en_uk";
 
 async function uploadAudio(filePath, apiKey) {
-  const data = fs.readFileSync(filePath);
+  const { size } = await fs.promises.stat(filePath);
+  const stream = fs.createReadStream(filePath);
   const res = await fetch(`${BASE}/upload`, {
     method: "POST",
     headers: {
       Authorization: apiKey,
       "Content-Type": "application/octet-stream",
+      "Content-Length": String(size),
     },
-    body: data,
+    body: stream,
+    duplex: "half",
   });
   if (!res.ok) {
     throw new Error(
@@ -54,16 +57,25 @@ async function pollTranscript(
       headers: { Authorization: apiKey },
     });
     if (!res.ok) {
-      throw new Error(`AssemblyAI poll failed: ${res.status}`);
+      throw new Error(
+        `AssemblyAI poll failed: ${res.status} (transcript id: ${id})`,
+      );
     }
     const data = await res.json();
     if (data.status === "completed") return data;
     if (data.status === "error") {
-      throw new Error(`AssemblyAI transcription error: ${data.error}`);
+      throw new Error(
+        `AssemblyAI transcription error: ${data.error || "unknown"} (transcript id: ${id})`,
+      );
     }
     await new Promise((r) => setTimeout(r, intervalMs));
   }
-  throw new Error("Timed out waiting for AssemblyAI transcript");
+  console.warn(
+    `[assemblyai] Transcript polling timed out — transcript id: ${id}`,
+  );
+  throw new Error(
+    `Timed out waiting for AssemblyAI transcript (transcript id: ${id})`,
+  );
 }
 
 function utterancesToSegments(transcript) {
@@ -95,4 +107,4 @@ async function transcribeFile(filePath, apiKey) {
   return utterancesToSegments(transcript);
 }
 
-module.exports = { transcribeFile };
+module.exports = { transcribeFile, utterancesToSegments };

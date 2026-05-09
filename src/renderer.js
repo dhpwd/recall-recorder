@@ -18,7 +18,7 @@ async function loadSettings() {
   autoRecordCheckbox.checked = settings.autoRecord !== false;
   assemblyAiApiKeyInput.value = settings.assemblyAiApiKey || "";
   inPersonMaxDurationInput.value =
-    settings.inPersonMaxDurationMinutes ?? 60;
+    settings.inPersonMaxDurationMinutes ?? "";
 }
 
 browseBtn.addEventListener("click", async () => {
@@ -29,14 +29,17 @@ browseBtn.addEventListener("click", async () => {
 });
 
 saveBtn.addEventListener("click", async () => {
-  const maxMinutes = Number(inPersonMaxDurationInput.value);
+  const raw = inPersonMaxDurationInput.value.trim();
+  const parsed = Number(raw);
+  const inPersonMaxDurationMinutes =
+    raw && Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+
   await window.api.saveSettings({
     recallApiKey: recallApiKeyInput.value,
     inboxFolder: inboxFolderInput.value,
     autoRecord: autoRecordCheckbox.checked,
     assemblyAiApiKey: assemblyAiApiKeyInput.value,
-    inPersonMaxDurationMinutes:
-      Number.isFinite(maxMinutes) && maxMinutes > 0 ? maxMinutes : 60,
+    inPersonMaxDurationMinutes,
   });
 
   saveStatus.textContent = "Saved";
