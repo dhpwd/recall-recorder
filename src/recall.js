@@ -59,6 +59,13 @@ async function handleMeetingDetected(evt) {
     return;
   }
 
+  try {
+    if (require("./inperson").isRecording()) {
+      console.log("[recall] In-person recording active, skipping auto-record");
+      return;
+    }
+  } catch {}
+
   const meetingTitle = evt.window?.title || "Untitled Meeting";
   console.log("[recall] Starting recording for:", meetingTitle);
 

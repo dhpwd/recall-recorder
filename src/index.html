@@ -32,6 +32,30 @@
         </label>
       </div>
 
+      <h2>In-person recording</h2>
+
+      <div class="field">
+        <label for="assemblyAiApiKey">AssemblyAI API key</label>
+        <input
+          type="password"
+          id="assemblyAiApiKey"
+          placeholder="Enter your AssemblyAI API key"
+        />
+      </div>
+
+      <div class="field">
+        <label for="inPersonMaxDurationMinutes">
+          Auto-stop after (minutes)
+        </label>
+        <input
+          type="number"
+          id="inPersonMaxDurationMinutes"
+          min="1"
+          max="600"
+          step="1"
+        />
+      </div>
+
       <div class="actions">
         <button id="saveBtn" type="button">Save</button>
         <span id="saveStatus" class="status-msg"></span>

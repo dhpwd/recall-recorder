@@ -1,10 +1,19 @@
 require("dotenv").config();
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  shell,
+  globalShortcut,
+  session,
+} = require("electron");
 const path = require("node:path");
 const settings = require("./settings");
 const tray = require("./tray");
 const recall = require("./recall");
+const inperson = require("./inperson");
 
 if (require("electron-squirrel-startup")) {
   app.quit();
@@ -66,9 +75,38 @@ function registerIpcHandlers() {
     }
     return null;
   });
+
+  ipcMain.handle("toggle-in-person", () => inperson.toggle());
+
+  ipcMain.handle("get-in-person-status", () => ({
+    isRecording: inperson.isRecording(),
+  }));
+}
+
+function registerInPersonShortcut() {
+  const accelerator = settings.getInPersonShortcut(settings.load());
+  try {
+    const ok = globalShortcut.register(accelerator, () => {
+      inperson.toggle();
+    });
+    if (!ok) {
+      console.error(`[main] Failed to register global shortcut: ${accelerator}`);
+    } else {
+      console.log(`[main] Registered global shortcut: ${accelerator}`);
+    }
+  } catch (err) {
+    console.error("[main] globalShortcut.register threw:", err);
+  }
 }
 
 app.whenReady().then(() => {
+  session.defaultSession.setPermissionRequestHandler(
+    (_webContents, permission, callback) => {
+      if (permission === "media") return callback(true);
+      callback(false);
+    },
+  );
+
   createWindow();
 
   const currentSettings = settings.load();
@@ -78,16 +116,26 @@ app.whenReady().then(() => {
     getWindow: () => mainWindow,
   });
 
+  const onStateChange = (state, detail) =>
+    tray.handleStateChange(state, detail);
+
   recall.init({
-    onStateChange: (state, detail) => tray.handleStateChange(state, detail),
+    onStateChange,
     settingsLoader: () => settings.load(),
   });
 
+  inperson.init({ onStateChange });
+
   registerIpcHandlers();
+  registerInPersonShortcut();
 });
 
 app.on("window-all-closed", () => {
   // Keep the app running in the tray on macOS – don't quit
+});
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });
 
 app.on("before-quit", () => {

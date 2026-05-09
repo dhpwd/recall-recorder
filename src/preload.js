@@ -6,4 +6,6 @@ contextBridge.exposeInMainWorld("api", {
   getRecordingStatus: () => ipcRenderer.invoke("get-recording-status"),
   openInboxFolder: () => ipcRenderer.invoke("open-inbox-folder"),
   selectFolder: () => ipcRenderer.invoke("select-folder"),
+  toggleInPerson: () => ipcRenderer.invoke("toggle-in-person"),
+  getInPersonStatus: () => ipcRenderer.invoke("get-in-person-status"),
 });

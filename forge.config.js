@@ -52,6 +52,22 @@ module.exports = {
                 js: "./src/preload.js",
               },
             },
+            {
+              html: "./src/recorder.html",
+              js: "./src/recorder-renderer.js",
+              name: "recorder_window",
+              preload: {
+                js: "./src/recorder-preload.js",
+              },
+            },
+            {
+              html: "./src/indicator.html",
+              js: "./src/indicator-renderer.js",
+              name: "indicator_window",
+              preload: {
+                js: "./src/indicator-preload.js",
+              },
+            },
           ],
         },
       },

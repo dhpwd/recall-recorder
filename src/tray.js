@@ -1,6 +1,7 @@
 const { Tray, Menu, Notification, shell, nativeImage } = require("electron");
 const path = require("node:path");
 const recall = require("./recall");
+const inperson = require("./inperson");
 const settings = require("./settings");
 
 let tray = null;
@@ -13,6 +14,8 @@ const STATUS_LABELS = {
   recording: "Status: Recording",
   processing: "Status: Processing Transcript",
   error: "Status: Error",
+  "inperson-recording": "Status: Recording (in-person)",
+  "inperson-processing": "Status: Processing Transcript",
 };
 
 function create({ getWindow }) {
@@ -33,17 +36,34 @@ function create({ getWindow }) {
 }
 
 function updateMenu() {
-  const statusLabel =
-    currentMeetingTitle && state === "recording"
-      ? `Recording: ${currentMeetingTitle}`
-      : STATUS_LABELS[state] || STATUS_LABELS.idle;
+  const recallActive = state === "recording";
+  const inpersonActive = state === "inperson-recording";
+
+  let statusLabel;
+  if (recallActive && currentMeetingTitle) {
+    statusLabel = `Recording: ${currentMeetingTitle}`;
+  } else if (inpersonActive) {
+    statusLabel = "Recording: in-person";
+  } else {
+    statusLabel = STATUS_LABELS[state] || STATUS_LABELS.idle;
+  }
+
+  const accelerator = settings.getInPersonShortcut(settings.load());
 
   const template = [
     { label: statusLabel, enabled: false },
     {
       label: "Stop Recording",
-      enabled: state === "recording",
+      enabled: recallActive,
       click: () => recall.stopRecording(),
+    },
+    {
+      label: inpersonActive
+        ? "Stop In-Person Recording"
+        : "Start In-Person Recording",
+      accelerator,
+      enabled: inpersonActive || (!recallActive && state !== "processing"),
+      click: () => inperson.toggle(),
     },
     { type: "separator" },
     {
@@ -72,6 +92,12 @@ function updateMenu() {
   tray.setContextMenu(contextMenu);
 }
 
+function restingState() {
+  if (recall.isRecording()) return "recording";
+  if (inperson.isRecording()) return "inperson-recording";
+  return "idle";
+}
+
 function handleStateChange(newState, detail) {
   state = newState;
 
@@ -88,7 +114,21 @@ function handleStateChange(newState, detail) {
       break;
     case "transcript-ready":
       showNotification("Transcript Saved", detail || "Transcript ready");
-      state = "idle";
+      state = restingState();
+      break;
+    case "inperson-recording":
+      currentMeetingTitle = "in-person";
+      showNotification("Recording Started", "Recording in-person meeting");
+      break;
+    case "inperson-processing":
+      currentMeetingTitle = null;
+      break;
+    case "inperson-transcript-ready":
+      showNotification(
+        "Transcript Saved",
+        detail || "In-person transcript ready",
+      );
+      state = restingState();
       break;
     case "error":
       showNotification("Error", detail || "An error occurred");

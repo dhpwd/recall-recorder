@@ -20,6 +20,18 @@ npm start
 
 On first launch, macOS will prompt for Accessibility, Microphone, and Screen & System Audio Recording permissions. In dev mode these are attributed to your terminal app.
 
+## In-person recording
+
+For meetings without a video call window, hit `⌘⌥R` (Cmd+Option+R) to start a mic-only recording (or use the tray menu's "Start In-Person Recording"). A small floating indicator shows in the top-right with a timer; press `⌘⌥R` again to stop. Audio is uploaded to AssemblyAI directly and saved as a transcript in your inbox folder.
+
+Configure via `.env` (see `.env.example`):
+
+- `ASSEMBLYAI_API_KEY` – required
+- `IN_PERSON_MAX_DURATION_MINUTES` – auto-stop limit (default `60`)
+- `IN_PERSON_SHORTCUT` – Electron accelerator string (default `Command+Option+R`); the shortcut is registered system-wide while the app runs
+
+The packaged app reads these from Preferences → "In-person recording" instead.
+
 ## Packaging
 
 ```bash
