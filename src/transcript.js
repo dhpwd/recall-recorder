@@ -62,7 +62,7 @@ function displayName(segment) {
 }
 
 // Two speakers sharing a display name are still two speakers. Merging them
-// hides the speaker-timeline collapse documented in system-patterns.md – a
+// hides the speaker-timeline collapse in docs/patterns/diarisation.md – a
 // collapsed transcript would otherwise look exactly like a normal one.
 function buildSpeakerLabels(segments) {
   const nameByKey = new Map();

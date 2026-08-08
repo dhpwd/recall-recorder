@@ -12,7 +12,13 @@ cp .env.example .env
 # Add your Recall API key to .env
 ```
 
-You'll also need an AssemblyAI API key added to Recall's Transcription settings. `memory-bank/tech-context.md` covers the full dashboard setup.
+You'll need a [Recall.ai](https://eu-central-1.recall.ai) account and an AssemblyAI account. In the Recall dashboard:
+
+1. Create an API key and add it to `.env` as `RECALL_API_KEY`
+2. Open Transcription settings and add your AssemblyAI API key
+3. Set the AssemblyAI endpoint – `api.eu.assemblyai.com` for EU, `api.assemblyai.com` for US
+
+Building also needs Node.js 18+ and the Xcode Command Line Tools.
 
 ## Running
 
@@ -40,7 +46,7 @@ Quit the app before editing, or it may overwrite the file when it next saves. Th
 
 Keep the combined total under 200 phrases, with a maximum of 6 words per phrase. The 200 is Universal-2's cap, which applies because the request lists that model as a fallback. Leave out ordinary English words: biasing toward a common word costs accuracy elsewhere, and it transcribes correctly anyway.
 
-If a name keeps coming back the _same_ wrong way and a keyterm hasn't helped, `custom_spelling` is the next lever. See `memory-bank/system-patterns.md`.
+If a name keeps coming back the _same_ wrong way and a keyterm hasn't helped, `custom_spelling` is the next lever. See `docs/recall-api.md`.
 
 ## Code signing
 
@@ -138,7 +144,7 @@ Electron's `EnableCookieEncryption` fuse is off. With it on, Chromium encrypts i
 
 Nothing is protected by turning it on here: the only window loads local content and holds no cookies, the app never calls `safeStorage`, and the API key is already stored as plain JSON in `settings.json`. Turn it back on if a window ever authenticates against a remote service, and accept a keychain prompt per build.
 
-`memory-bank/tech-context.md` has the mechanism, under "Why permissions break on every rebuild", along with the workarounds that don't hold.
+`docs/patterns/code-signing.md` has the mechanism, along with the workarounds that don't hold.
 
 ## Licence
 
