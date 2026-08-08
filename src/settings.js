@@ -8,6 +8,9 @@ const DEFAULTS = {
   inboxFolder: path.join(app.getPath("home"), "call-transcripts", "inbox"),
   autoRecord: true,
   recallApiKey: "",
+  // Account and partner names to bias transcription toward. Kept here rather
+  // than in the repository because it is public – see src/keyterms.js.
+  keyterms: [],
 };
 
 function getApiKey(settings) {

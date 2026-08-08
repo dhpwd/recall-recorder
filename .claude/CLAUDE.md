@@ -1,3 +1,3 @@
 # Recall Recorder
 
-@~/cli-agents/shared/memory-bank.md
+@~/Workspace/cli-agents/shared/coding.md
