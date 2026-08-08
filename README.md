@@ -1,6 +1,6 @@
 # Recall Recorder
 
-macOS menu bar app that auto-records video calls (Zoom, Meet, Teams) and saves speaker-attributed transcripts as markdown files via the Recall.ai Desktop SDK.
+macOS menu bar app that auto-records video calls (Zoom, Meet, Teams, Webex) and saves speaker-attributed transcripts as markdown files via the Recall.ai Desktop SDK.
 
 Requires macOS 14.2+ on Apple Silicon. Recording is audio-only, and the system-audio permission it needs is unavailable below 14.2.
 
@@ -28,7 +28,7 @@ Building also needs Node.js 18+ and the Xcode Command Line Tools.
 npm start
 ```
 
-On first launch, macOS prompts for Microphone and System Audio Recording. Accessibility has no prompt and must be granted by hand in System Settings → Privacy & Security → Accessibility using the '+' button. In dev mode all three are attributed to your terminal app.
+On first launch, macOS prompts for Microphone and System Audio Recording. Accessibility has no prompt and must be granted by hand in System Settings → Privacy & Security → Accessibility using the '+' button. In dev mode all three are attributed to your terminal app, so the packaged app needs its own grants – they don't carry over.
 
 ## Transcription accuracy
 

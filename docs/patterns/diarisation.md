@@ -24,6 +24,6 @@ The trigger is two or more remote participants sharing a display name on the mee
 
 The warning fires on duplicate display names, which is the trigger for a collapse rather than the collapse itself – two people with the same name may still be attributed correctly. Treat it as a prompt to check.
 
-**Cheap pre-flight check:** download `media_shortcuts.participant_events.data.participants_download_url` for the recording. Two or more entries sharing a `name` make the collapse likely, and this is available before transcription completes.
+**Pre-flight check, one request:** download `media_shortcuts.participant_events.data.participants_download_url` for the recording. Two or more entries sharing a `name` make the collapse likely, and this is available before transcription completes.
 
-Confirmed once, on 06/05/2026. The `participants` artefact held 4 entries but only 2 unique display names, each shared by two IDs, one participant having joined as "Guest" and been renamed mid-call. The `speaker_timeline` only ever fired events for two of those IDs, 80 events between them, and the other two got none. AssemblyAI's voice diarisation later found 4 distinct voices in the same audio, so the merged participants really were different people.
+Confirmed once, on 6th May 2026. The `participants` artefact held 4 entries but only 2 unique display names, each shared by two IDs, one participant having joined as "Guest" and been renamed mid-call. The `speaker_timeline` only ever fired events for two of those IDs, 80 events between them, and the other two got none. AssemblyAI's voice diarisation later found 4 distinct voices in the same audio, so the merged participants really were different people.

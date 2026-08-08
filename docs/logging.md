@@ -21,7 +21,7 @@ Look for the `permission-status` lines on launch:
 [recall] Permission full-disk-access: not_requested
 ```
 
-That is the correct shape for audio-only recording – the two unused permissions read `not_requested`, not `denied`. These fire at startup, before the `requestPermission` calls, so they report current state rather than the result of the request.
+That is what a healthy audio-only launch looks like – the two unused permissions read `not_requested`, not `denied`. These fire at startup, before the `requestPermission` calls, so they report current state rather than the result of the request.
 
 `permissions-granted` is not a substitute. It signals a transition and does not fire on a launch where nothing changed, so its absence means nothing.
 

@@ -30,7 +30,7 @@ Each of these is required, and omitting any of them produces a build that report
 
 `package.json` overrides `@electron/osx-sign` with Recall's fork, which parallelises signing for speed and makes no difference to correctness.
 
-The bundle identifier `com.fidero.recall-recorder` appears in the designated requirement, so changing it invalidates every grant exactly as a certificate change would. Keep it stable.
+The designated requirement names the bundle identifier `com.fidero.recall-recorder` and the certificate, and needs both to match, so changing either invalidates every grant. Keep the identifier stable. On its own it binds nothing – an ad-hoc build carries the same identifier and still breaks on every rebuild.
 
 **Anti-pattern:** trusting the build's exit status. Verify the signature after packaging – CLAUDE.md's full verify has the commands. Anything that suppresses a signing failure puts the manual `codesign` step back.
 

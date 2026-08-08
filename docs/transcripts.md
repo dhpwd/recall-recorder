@@ -1,10 +1,12 @@
 # Transcript output
 
-`src/transcript.js` turns Recall's JSON segments into the markdown file. `saveTranscript` writes it, `transformTranscript` renders it, and `recover-transcript.js` calls both, so a change to rendering changes recovery too.
+`src/transcript.js` turns Recall's JSON segments into the markdown file. `transformTranscript` renders it and `saveTranscript` writes it. `recover-transcript.js` imports `transformTranscript` and `buildFilename` but writes through its own `saveToInbox`, so a change to rendering reaches recovery while a change to the write path does not.
 
 ## File contract
 
-Files are named `YYYY-MM-DD_HHmm_meeting-title.md`, with the slug lowercased, non-alphanumerics collapsed to hyphens and truncated to 60 characters. They land in the inbox folder, `~/call-transcripts/inbox/` by default and configurable in Preferences.
+Files are named `YYYY-MM-DD_HHmm_meeting-title.md`, with the slug lowercased, non-alphanumerics collapsed to hyphens and truncated to 60 characters. `buildFilename` takes the date from `toISOString()` (UTC) and the time from `getHours()` (local), so outside UTC the two halves disagree either side of midnight.
+
+The app writes to the inbox folder, `~/call-transcripts/inbox/` by default and configurable in Preferences. `recover-transcript.js` hardcodes the default and never reads `settings.inboxFolder`, so a configured inbox and a recovered transcript end up in different directories.
 
 ```markdown
 ---
@@ -28,7 +30,7 @@ recall_upload_id: "4abf29fc-36b5-4853-9f84-a9990b9e354b"
 
 A separate processing workflow consumes these fields, so renaming or dropping one is a breaking change rather than a formatting choice.
 
-`duration_minutes` comes from `endTime - startTime` when the app recorded a `recording-ended`, and otherwise from the last word's offset into the recording. The clock at save time is not the end of the call – saving happens after transcript polling, which can add tens of minutes.
+`duration_minutes` comes from `endTime - startTime` whenever both are present, and otherwise from the last word's offset into the recording. The app sets `endTime` when `recording-ended` fires, and recovery sets it from the recording's `completed_at`, so the fallback only applies to a recording that has neither. The clock at save time is not the end of the call – saving happens after transcript polling, which can add tens of minutes.
 
 ## Speaker labels
 
@@ -42,4 +44,4 @@ Participants with no `name` at all, such as PSTN dial-ins, render as `Speaker <i
 
 `keyterms_prompt` biases recognition toward words that would otherwise come back wrong. `src/keyterms.js` holds generic industry and tool vocabulary only, because the repository is public. Account, customer and partner names go in `keyterms` in the user's `settings.json`, and `buildKeyterms` merges the two.
 
-Keep the combined total under 200 phrases at 6 words each, the Universal-2 cap that applies because the request lists that model as a fallback. Ordinary English words are deliberately absent – biasing toward a common word costs accuracy elsewhere and it transcribes correctly anyway.
+`docs/recall-api.md` owns the provider limits the list has to fit. Ordinary English words are deliberately absent – biasing toward a common word costs accuracy elsewhere and it transcribes correctly anyway.

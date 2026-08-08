@@ -6,7 +6,7 @@ The Recall Desktop SDK ships a native macOS binary (`desktop_sdk_macos_exe`) and
 
 **Problem:** `GStreamer.framework` uses the canonical macOS framework layout, where `GStreamer`, `Libraries` and `Resources` are symlinks into `Versions/Current/`. `copy-webpack-plugin` dereferences symlinks, which turns those into real files and directories. That duplicates the whole framework payload (~140MB) and produces a directory `codesign` rejects with `bundle format is ambiguous (could be app or framework)`, failing the build.
 
-**Solution:** `CopyFrameworksPlugin` in `webpack.main.config.js` copies it separately with `fs.cpSync({ verbatimSymlinks: true })`. Only the binary goes through `copy-webpack-plugin`.
+**Solution:** `CopyFrameworksPlugin` in `webpack.main.config.js` copies it separately with `fs.cpSync({ verbatimSymlinks: true })`. `copy-webpack-plugin` keeps the other two payloads, `assets/` and the SDK binary, neither of which contains a symlink.
 
 **Verify after a build** – those three entries must still be symlinks, and CLAUDE.md's full verify lists the command. A correctly copied framework signs as `org.freedesktop.gstreamer`, while a dereferenced one keeps whatever linker signature Recall's build machine left on it, an identifier shaped like `tmp<random>GStreamer`.
 

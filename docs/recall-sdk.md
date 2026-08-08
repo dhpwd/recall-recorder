@@ -28,7 +28,7 @@ Two events still ship but are dead. `sdk-state-change` is deprecated, replaced b
 
 The SDK stops recording by itself when it detects the meeting ended, so `meeting-closed` is not the hook for auto-stop.
 
-`meeting-closed`, `media-capture-status`, `error`, `shutdown` and `log` drive no behaviour. They exist so a failure leaves a timestamped cause in the log file – see `docs/logging.md`.
+`media-capture-status`, `error`, `shutdown` and `log` drive no behaviour. They exist so a failure leaves a timestamped cause in the log file – see `docs/logging.md`. `meeting-closed` is mostly diagnostic too, but its handler calls `updateRecordingMetadata`, because on a short call it can be the first event carrying a title – removing the listener would file those calls as "Untitled Meeting".
 
 ## Window metadata arrives after detection
 

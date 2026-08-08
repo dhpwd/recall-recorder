@@ -17,6 +17,8 @@ The script reads the API key from `RECALL_API_KEY` or from `~/Library/Applicatio
 
 Pass the title as the second argument. The stored one is almost always "Untitled Meeting" and cannot be corrected on Recall's side – see `docs/recall-api.md`.
 
+A recovered file is not identical to one the app wrote. The script writes `platform: "unknown"` unconditionally, and it saves to the default inbox rather than a configured one, so check both before handing the file to anything that reads the frontmatter.
+
 ## Which route to take
 
 | Situation                                                                       | Route                                                             |
