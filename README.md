@@ -4,6 +4,8 @@ macOS menu bar app that auto-records video calls (Zoom, Meet, Teams) and saves s
 
 Requires macOS 14.2+ on Apple Silicon. Recording is audio-only, and the system-audio permission it needs is unavailable below 14.2.
 
+[I replaced Granola in 2 hours](https://danhopwood.com/posts/i-replaced-granola-in-2-hours) covers why this exists and what it was built against. It describes the first release, so follow this README rather than the post for setup and current behaviour.
+
 ## Setup
 
 ```bash

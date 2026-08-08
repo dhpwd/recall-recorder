@@ -28,7 +28,7 @@ node recover-transcript.js <upload-id> ["Meeting title"] [--rerender]
 node --check <each changed .js file>
 ```
 
-No linter and no test suite – `npm run lint` is a stub. FID-554 covers adding both.
+No linter and no test suite – `npm run lint` is a stub. DHP-5 covers adding both.
 
 ### Full verify (at completion)
 

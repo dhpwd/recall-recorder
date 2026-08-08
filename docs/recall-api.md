@@ -54,7 +54,7 @@ The request body sent by both `src/recall.js` and `recover-transcript.js`:
 }
 ```
 
-`speech_models` is plural and a list. The older singular `speech_model` string returns an error, and Recall's own AssemblyAI guide may still show it. Recall does not validate the models – there is no enum, and the array passes straight through – so a wrong string fails the transcript rather than the API call. [AssemblyAI's model list](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-speech-model) is authoritative. FID-555 covers sharing this body between the two callers instead of keeping them in step by hand.
+`speech_models` is plural and a list. The older singular `speech_model` string returns an error, and Recall's own AssemblyAI guide may still show it. Recall does not validate the models – there is no enum, and the array passes straight through – so a wrong string fails the transcript rather than the API call. [AssemblyAI's model list](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-speech-model) is authoritative. DHP-6 covers sharing this body between the two callers instead of keeping them in step by hand.
 
 `punctuate`, `format_text` and `disfluencies` already default to what a clean business transcript wants.
 

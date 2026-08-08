@@ -6,7 +6,7 @@
 
 `stopRecording`, `pauseRecording`, `resumeRecording` and `uploadRecording` take a named `{ windowId }`, never a positional argument. Calling `stopRecording()` bare throws `TypeError: Cannot destructure property 'windowId' of 'undefined'`.
 
-When `stopRecording` fails, `src/recall.js` falls back to `RecallAiSdk.shutdown()` followed by a re-init. That kills the native subprocess, which is drastic, but it beats an app stuck in a state it cannot leave. The fallback leaves `currentRecording` set, because no `recording-ended` follows it – so the tray stays on "Recording" and the transcript is never polled. FID-552 covers that.
+When `stopRecording` fails, `src/recall.js` falls back to `RecallAiSdk.shutdown()` followed by a re-init. That kills the native subprocess, which is drastic, but it beats an app stuck in a state it cannot leave. The fallback leaves `currentRecording` set, because no `recording-ended` follows it – so the tray stays on "Recording" and the transcript is never polled. DHP-3 covers that.
 
 ## Events
 

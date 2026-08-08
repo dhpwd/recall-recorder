@@ -16,7 +16,7 @@ The Recall Desktop SDK ships a native macOS binary (`desktop_sdk_macos_exe`) and
 
 **Solution:** `forge.config.js` uses `asar.unpackDir: ".webpack/main"`, which keeps the whole main-process output outside the archive.
 
-**Trade-off:** that unpacks more than it needs to, but narrowing it saves no space. Of 146MB unpacked, 137MB is `Frameworks/` and 9.3MB the SDK binary, both of which must stay outside to be executable, leaving ~92KB to move. The gain would be asar integrity coverage for `index.js`. FID-557 covers it.
+**Trade-off:** that unpacks more than it needs to, but narrowing it saves no space. Of 146MB unpacked, 137MB is `Frameworks/` and 9.3MB the SDK binary, both of which must stay outside to be executable, leaving ~92KB to move. The gain would be asar integrity coverage for `index.js`. DHP-10 covers it.
 
 ## afterEmit plugin order is the sequencing
 

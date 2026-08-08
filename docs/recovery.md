@@ -1,6 +1,6 @@
 # Recovering a transcript
 
-Transcript polling runs in the main process with nothing persisted, so quitting mid-processing loses the transcript. The recording itself is usually safe – the native SDK binary completes uploads independently of Electron – which is what makes recovery by hand possible. FID-553 covers making the app resilient instead.
+Transcript polling runs in the main process with nothing persisted, so quitting mid-processing loses the transcript. The recording itself is usually safe – the native SDK binary completes uploads independently of Electron – which is what makes recovery by hand possible. DHP-4 covers making the app resilient instead.
 
 ```bash
 node recover-transcript.js <upload-id> ["Meeting title"] [--rerender]
