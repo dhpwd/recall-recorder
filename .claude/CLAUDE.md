@@ -8,9 +8,9 @@ macOS menu bar app that auto-records video calls through the Recall.ai Desktop S
 
 ## Constraints
 
-- The repository is public. Account, customer and partner names stay out of it and belong in `keyterms` in the user's `settings.json` – `src/keyterms.js` holds generic industry vocabulary only
-- Transcript frontmatter is a consumed contract, not a display detail. Files land in `~/call-transcripts/inbox/` and a separate processing workflow reads `date`, `platform`, `meeting_title`, `participants`, `duration_minutes` and `recall_upload_id`. Renaming or dropping a field breaks it
-- Recording is audio-only and needs macOS 14.2+ on Apple Silicon, because the `system-audio` permission does not exist below that
+- **The repo is public.** Everything committed is world-readable. Account, customer and partner names stay out of it and belong in `keyterms` in the user's `settings.json` – `src/keyterms.js` holds generic industry vocabulary only
+- **Transcript frontmatter is a consumed contract**, not a display detail. A separate processing workflow reads the fields, so renaming or dropping one is a breaking change – `docs/transcripts.md` owns the list
+- **Recording is audio-only**, which needs macOS 14.2+ on Apple Silicon because the `system-audio` permission does not exist below that
 
 ## Commands
 
