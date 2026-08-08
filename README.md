@@ -28,7 +28,7 @@ Building also needs Node.js 18+ and the Xcode Command Line Tools.
 npm start
 ```
 
-On first launch, macOS prompts for Microphone and System Audio Recording. Accessibility has no prompt and must be granted by hand in System Settings → Privacy & Security → Accessibility using the '+' button. In dev mode all three are attributed to your terminal app, so the packaged app needs its own grants – they don't carry over.
+On first launch, macOS prompts for Microphone and System Audio Recording. Accessibility works differently: no dialog can grant it, so enable Recall Recorder yourself under System Settings → Privacy & Security → Accessibility, adding it with the '+' button if it isn't already listed. In dev mode all three are attributed to your terminal app, so the packaged app needs its own grants – they don't carry over.
 
 ## Transcription accuracy
 
