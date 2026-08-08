@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./logger");
 
 const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("node:path");
@@ -90,9 +91,18 @@ app.on("window-all-closed", () => {
   // Keep the app running in the tray on macOS – don't quit
 });
 
-app.on("before-quit", () => {
-  if (mainWindow) {
+let sdkShutdownStarted = false;
+
+app.on("before-quit", (e) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.removeAllListeners("close");
     mainWindow.close();
   }
+
+  // Defer the quit once so the SDK can stop its native subprocess itself.
+  // recall.shutdown() is bounded, and finally() means a failure still quits.
+  if (sdkShutdownStarted) return;
+  sdkShutdownStarted = true;
+  e.preventDefault();
+  recall.shutdown().finally(() => app.quit());
 });

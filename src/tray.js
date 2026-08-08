@@ -2,6 +2,7 @@ const { Tray, Menu, Notification, shell, nativeImage } = require("electron");
 const path = require("node:path");
 const recall = require("./recall");
 const settings = require("./settings");
+const { getLogFilePath } = require("./logger");
 
 let tray = null;
 let settingsWindow = null;
@@ -64,6 +65,10 @@ function updateMenu() {
         }
       },
     },
+    {
+      label: "Reveal Log File",
+      click: () => shell.showItemInFolder(getLogFilePath()),
+    },
     { type: "separator" },
     { label: "Quit", role: "quit" },
   ];
@@ -73,15 +78,22 @@ function updateMenu() {
 }
 
 function handleStateChange(newState, detail) {
+  const previousState = state;
   state = newState;
 
   switch (newState) {
     case "recording":
-      currentMeetingTitle = detail || null;
-      showNotification(
-        "Recording Started",
-        `Recording: ${detail || "meeting"}`,
-      );
+      // Keep an existing title when given none – recording-started can arrive
+      // before the title is known, and later than the event that set it.
+      currentMeetingTitle = detail || currentMeetingTitle;
+      // Only on the transition into recording. Several events report the
+      // recording state during one call, and each would otherwise notify.
+      if (previousState !== "recording") {
+        showNotification(
+          "Recording Started",
+          `Recording: ${currentMeetingTitle || "meeting"}`,
+        );
+      }
       break;
     case "processing":
       currentMeetingTitle = null;
