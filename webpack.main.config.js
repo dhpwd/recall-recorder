@@ -24,6 +24,38 @@ function chmodRecursive(dir, fileMode) {
   }
 }
 
+// Frameworks is copied here rather than by copy-webpack-plugin because that
+// dereferences symlinks. GStreamer.framework ships the canonical framework
+// layout (GStreamer -> Versions/Current/GStreamer and the same for Libraries
+// and Resources); flattening those into real files duplicates the payload and
+// leaves a directory codesign rejects as "bundle format is ambiguous".
+class CopyFrameworksPlugin {
+  apply(compiler) {
+    compiler.hooks.afterEmit.tapAsync(
+      "CopyFrameworksPlugin",
+      (_compilation, callback) => {
+        try {
+          const dest = path.join(compiler.outputPath, "Frameworks");
+          // Skipped when already present so watch-mode rebuilds don't repeat a
+          // ~140MB copy. `make` starts from a clean output directory, so a
+          // stale copy can only survive within a single dev session.
+          if (fs.existsSync(dest)) {
+            callback();
+            return;
+          }
+          fs.cpSync(path.join(sdkDir, "Frameworks"), dest, {
+            recursive: true,
+            verbatimSymlinks: true,
+          });
+        } catch (err) {
+          console.warn("Could not copy Frameworks:", err.message);
+        }
+        callback();
+      },
+    );
+  }
+}
+
 class FixPermissionsPlugin {
   apply(compiler) {
     compiler.hooks.afterEmit.tapAsync(
@@ -64,12 +96,11 @@ module.exports = {
           to: "desktop_sdk_macos_exe",
           toType: "file",
         },
-        {
-          from: path.join(sdkDir, "Frameworks"),
-          to: "Frameworks",
-        },
       ],
     }),
+    // Order matters – both tap afterEmit, and permissions are fixed on the
+    // files this copy puts in place.
+    new CopyFrameworksPlugin(),
     new FixPermissionsPlugin(),
   ],
 };
