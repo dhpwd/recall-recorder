@@ -37,6 +37,6 @@ A healthy call logs `Meeting closed` and then, within a second or two, `Recordin
 
 A missing local microphone is the failure nothing announces: the file is complete apart from the local user's voice, so it surfaces only when someone listens back. `media-capture-status` with `type: 'audio'` and `capturing: false` mid-call pins the moment capture stopped.
 
-Both failures have been observed once, neither has a known cause, and the SDK upgrade to 2.0.27 contains plausible fixes for each. The mic dropout lost a whole call's local audio, and the missing `recording-ended` followed a Teams call.
+Both failures have been observed once and neither has a known cause. The mic dropout lost a whole call's local audio, and the missing `recording-ended` followed a Teams call. The upgrade from 2.0.4 to 2.0.27 crossed enough audio and meeting-detection fixes to plausibly cover each, but no changelog entry names either symptom, so a recurrence on 2.0.27 or later rules that theory out.
 
 Once the cause is read, `docs/recovery.md` covers getting the transcript out.

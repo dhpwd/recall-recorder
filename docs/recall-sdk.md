@@ -63,6 +63,6 @@ Request them sequentially. Every example Recall publishes does, concurrent reque
 
 All three requests raise a dialog, but accessibility's behaves differently. Microphone and system-audio are granted from the dialog itself. Accessibility's cannot grant anything – it opens System Settings at Privacy & Security → Accessibility, where the user enables the app on the toggle. The app is normally listed there already, and '+' is the fallback when it is not.
 
-The request call was removed once, when the toggle reset on every launch, and restored on 2.0.27. No mechanism is documented by which requesting an already-granted permission revokes it. If the toggle stops persisting across restarts, this call is the first suspect.
+The request call was removed once, when the toggle reset on every launch, and restored on 2.0.27. No mechanism is documented by which requesting an already-granted permission revokes it, and 2.0.20 had by then fixed "accessibility permission dialog appeared unintentionally on initial install on macOS". If the toggle stops persisting across restarts, this call is the first suspect.
 
 Grants break on every rebuild unless the app is signed with a certificate – see `docs/patterns/code-signing.md`.

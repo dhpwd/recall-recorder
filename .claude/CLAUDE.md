@@ -22,17 +22,17 @@ node recover-transcript.js <upload-id> ["Meeting title"] [--rerender]
 
 ## Verification
 
-### Preflight (every change)
+### Preflight (every code change)
 
 ```bash
 node --check <each changed .js file>
 ```
 
-No linter and no test suite – `npm run lint` is a stub. DHP-5 covers the tests, DHP-13 the formatter.
+No linter and no test suite – `npm run lint` is a stub. DHP-5 covers both.
 
 ### Full verify (at completion)
 
-Preflight, then package and check the signature, since a signing failure does not fail the build:
+A change that touches no code needs neither step. Otherwise preflight, then package and check the signature, since a signing failure does not fail the build:
 
 ```bash
 APP="out/Recall Recorder-darwin-arm64/Recall Recorder.app"

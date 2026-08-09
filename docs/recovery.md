@@ -34,7 +34,7 @@ Never re-run the default route on a call that has already been recovered. It req
 
 ## Recovering a collapsed call with voice diarisation
 
-Only for a call where speaker-timeline attribution merged several remote voices onto one participant. `docs/patterns/diarisation.md` covers how to recognise that and why the trade-off exists. This is a manual sequence rather than a script route.
+Only for a call where speaker-timeline attribution merged several remote voices onto one participant. `docs/patterns/diarisation.md` covers how to recognise that and why the trade-off exists. This is a manual sequence rather than a script route, which DHP-12 covers adding.
 
 1. Take `recall_upload_id` from the broken file's frontmatter
 2. `GET /api/v1/sdk_upload/{upload_id}/` → `recording_id`

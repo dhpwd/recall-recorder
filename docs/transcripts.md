@@ -4,11 +4,11 @@
 
 ## File contract
 
-Files are named `YYYY-MM-DD_HHmm_meeting-title.md`, with the slug lowercased, non-alphanumerics collapsed to hyphens and truncated to 60 characters. `buildFilename` takes the date from `toISOString()` (UTC) and the time from `getHours()` (local), so outside UTC the two halves disagree either side of midnight.
+Files are named `YYYY-MM-DD_HHmm_meeting-title.md`, with the slug lowercased, non-alphanumerics collapsed to hyphens and truncated to 60 characters. `buildFilename` takes the date from `toISOString()` (UTC) and the time from `getHours()` (local), so outside UTC the two halves disagree either side of midnight. DHP-15 covers that.
 
 The app writes to the inbox folder, `~/call-transcripts/inbox/` by default and configurable in Preferences.
 
-`recover-transcript.js` breaks the contract on two points. It hardcodes the default inbox and never reads `settings.inboxFolder`, so a configured inbox and a recovered transcript end up in different directories, and it writes `platform: "unknown"` whatever the call was on.
+`recover-transcript.js` breaks the contract on two points. It hardcodes the default inbox and never reads `settings.inboxFolder`, so a configured inbox and a recovered transcript end up in different directories, and it writes `platform: "unknown"` whatever the call was on. DHP-16 covers closing both, along with the duplicated write path above.
 
 ```markdown
 ---

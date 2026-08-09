@@ -27,11 +27,13 @@ Waiting for the title before creating the upload is not an option, because the u
 
 ## Post-call flow
 
-Recording is local and uploads after the call finishes, in three polling phases at 30s intervals:
+Captured data streams to Recall during the call rather than uploading after it, but the upload only finalises once the call ends. Three polling phases at 30s intervals follow:
 
 1. `GET /api/v1/sdk_upload/{id}/` until `status.code === "complete"`, which yields `recording_id`
 2. `POST /api/v1/recording/{id}/create_transcript/` to trigger transcription
 3. `GET /api/v1/recording/{id}/` until `media_shortcuts.transcript.status.code === "done"`, then download `media_shortcuts.transcript.data.download_url`
+
+Phase 1 has a terminal failure state as well as `complete`. `status.code === "failed"` carries the reason in `status.sub_code`, which is what reaches the log as `Upload failed:`.
 
 SDK uploads use the recording endpoint, not `GET /api/v1/bot/{id}/`, which returns 404. The transcript URL sits directly on the recording object, not nested in a `recordings` array.
 
@@ -54,7 +56,7 @@ The request body sent by both `src/recall.js` and `recover-transcript.js`:
 }
 ```
 
-`speech_models` is plural and a list. The older singular `speech_model` string returns an error, and Recall's own AssemblyAI guide may still show it. Recall does not validate the models – there is no enum, and the array passes straight through – so a wrong string fails the transcript rather than the API call. [AssemblyAI's model list](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-speech-model) is authoritative. DHP-6 covers sharing this body between the two callers instead of keeping them in step by hand.
+`speech_models` is plural and a list. The older singular `speech_model` string returns an error, and Recall's own AssemblyAI guide may still show it. Recall does not validate the models – there is no enum, and the array passes straight through – so a wrong string fails the transcript rather than the API call. [AssemblyAI's model list](https://www.assemblyai.com/docs/pre-recorded-audio/select-the-speech-model) is authoritative. DHP-16 covers sharing this body between the two callers instead of keeping them in step by hand.
 
 `punctuate`, `format_text` and `disfluencies` already default to what a clean business transcript wants.
 
