@@ -23,8 +23,9 @@ function yamlString(value) {
 }
 
 // The clock at save time is not the end of the call – saving happens after
-// transcript polling. endTime is recorded when recording-ended fires; recovery
-// runs have none, so fall back to the last word's offset into the recording.
+// transcript polling. endTime is recorded when recording-ended fires, and
+// recovery takes it from the recording's completed_at, so the fallback to the
+// last word's offset only applies when neither is available.
 function durationSeconds(metadata, segments) {
   if (metadata.endTime && metadata.startTime) {
     return (metadata.endTime - metadata.startTime) / 1000;
@@ -62,7 +63,7 @@ function displayName(segment) {
 }
 
 // Two speakers sharing a display name are still two speakers. Merging them
-// hides the speaker-timeline collapse documented in system-patterns.md – a
+// hides the speaker-timeline collapse in docs/patterns/diarisation.md – a
 // collapsed transcript would otherwise look exactly like a normal one.
 function buildSpeakerLabels(segments) {
   const nameByKey = new Map();

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run make)",
+      "Bash(codesign --verify *)",
+      "Bash(codesign -d *)"
+    ]
+  }
+}

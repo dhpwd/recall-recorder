@@ -1,8 +1,10 @@
 # Recall Recorder
 
-macOS menu bar app that auto-records video calls (Zoom, Meet, Teams) and saves speaker-attributed transcripts as markdown files via the Recall.ai Desktop SDK.
+macOS menu bar app that auto-records video calls (Zoom, Meet, Teams, Webex) and saves speaker-attributed transcripts as markdown files via the Recall.ai Desktop SDK.
 
 Requires macOS 14.2+ on Apple Silicon. Recording is audio-only, and the system-audio permission it needs is unavailable below 14.2.
+
+[I replaced Granola in 2 hours](https://danhopwood.com/posts/i-replaced-granola-in-2-hours) covers why this exists and what it was built against. It describes the first release, so follow this README rather than the post for setup and current behaviour.
 
 ## Setup
 
@@ -12,7 +14,13 @@ cp .env.example .env
 # Add your Recall API key to .env
 ```
 
-You'll also need an AssemblyAI API key added to Recall's Transcription settings. `memory-bank/tech-context.md` covers the full dashboard setup.
+You'll need a [Recall.ai](https://eu-central-1.recall.ai) account and an AssemblyAI account. In the Recall dashboard:
+
+1. Create an API key and add it to `.env` as `RECALL_API_KEY`
+2. Open Transcription settings and add your AssemblyAI API key
+3. Set the AssemblyAI endpoint – `api.eu.assemblyai.com` for EU, `api.assemblyai.com` for US
+
+Building also needs Node.js 18+ and the Xcode Command Line Tools.
 
 ## Running
 
@@ -20,7 +28,7 @@ You'll also need an AssemblyAI API key added to Recall's Transcription settings.
 npm start
 ```
 
-On first launch, macOS prompts for Microphone and System Audio Recording. Accessibility has no prompt and must be granted by hand in System Settings → Privacy & Security → Accessibility using the '+' button. In dev mode all three are attributed to your terminal app.
+On first launch, macOS prompts for all three permissions. Microphone and System Audio Recording are granted from their prompts. Accessibility is the exception: its prompt cannot grant anything and instead takes you to System Settings → Privacy & Security → Accessibility, where you enable Recall Recorder on the toggle. It should already be listed there, and the '+' button is the fallback if it isn't. In dev mode all three are attributed to your terminal app, so the packaged app needs its own grants – they don't carry over.
 
 ## Transcription accuracy
 
@@ -40,7 +48,7 @@ Quit the app before editing, or it may overwrite the file when it next saves. Th
 
 Keep the combined total under 200 phrases, with a maximum of 6 words per phrase. The 200 is Universal-2's cap, which applies because the request lists that model as a fallback. Leave out ordinary English words: biasing toward a common word costs accuracy elsewhere, and it transcribes correctly anyway.
 
-If a name keeps coming back the _same_ wrong way and a keyterm hasn't helped, `custom_spelling` is the next lever. See `memory-bank/system-patterns.md`.
+If a name keeps coming back the _same_ wrong way and a keyterm hasn't helped, `custom_spelling` is the next lever. See `docs/recall-api.md`.
 
 ## Code signing
 
@@ -138,7 +146,7 @@ Electron's `EnableCookieEncryption` fuse is off. With it on, Chromium encrypts i
 
 Nothing is protected by turning it on here: the only window loads local content and holds no cookies, the app never calls `safeStorage`, and the API key is already stored as plain JSON in `settings.json`. Turn it back on if a window ever authenticates against a remote service, and accept a keychain prompt per build.
 
-`memory-bank/tech-context.md` has the mechanism, under "Why permissions break on every rebuild", along with the workarounds that don't hold.
+`docs/patterns/code-signing.md` has the mechanism, along with the workarounds that don't hold.
 
 ## Licence
 
