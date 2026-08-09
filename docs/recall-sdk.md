@@ -61,7 +61,7 @@ Request them sequentially. Every example Recall publishes does, concurrent reque
 
 `Info.plist`, via `extendInfo` in `forge.config.js`, must declare `NSMicrophoneUsageDescription` and `NSAudioCaptureUsageDescription`. Without the second, the system-audio dialog never appears in a packaged build.
 
-Requesting accessibility cannot grant it. macOS grants it only from System Settings, under Privacy & Security → Accessibility. A dialog does exist – Recall documents `requestPermission` as presenting one the first time a permission is requested, and 2.0.20 fixed "accessibility permission dialog appeared unintentionally on initial install on macOS" – but it routes to Settings rather than granting. Once a grant is invalidated by a rebuild, nothing re-prompts, which is why accessibility is the permission whose failure goes unreported.
+All three requests raise a dialog, but accessibility's behaves differently. Microphone and system-audio are granted from the dialog itself. Accessibility's cannot grant anything – it opens System Settings at Privacy & Security → Accessibility, where the user enables the app on the toggle. The app is normally listed there already, and '+' is the fallback when it is not.
 
 The request call was removed once, when the toggle reset on every launch, and restored on 2.0.27. No mechanism is documented by which requesting an already-granted permission revokes it. If the toggle stops persisting across restarts, this call is the first suspect.
 
