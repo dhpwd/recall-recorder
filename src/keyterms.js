@@ -6,13 +6,8 @@
 // settings.json, which lives in the app's userData directory and is never
 // committed. `buildKeyterms` merges the two.
 //
-// Limits: 1000 phrases on Universal-3 and later, 200 on Universal-2, and 6
-// words per phrase. The request lists universal-2 as a fallback, so keep the
-// combined total under 200.
-//
-// Ordinary English words are deliberately absent (Impact, Branch, Attribution):
-// biasing toward them costs accuracy elsewhere and they transcribe correctly
-// anyway.
+// docs/transcripts.md, "Keyterms", covers what belongs in the list.
+// docs/recall-api.md owns the provider limits the combined list has to fit.
 
 const DOMAIN = [
   "customer data platform",

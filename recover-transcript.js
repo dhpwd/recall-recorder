@@ -1,24 +1,11 @@
 #!/usr/bin/env node
 /**
- * Recovery script: polls Recall API for a recording, creates transcript, saves to inbox.
+ * Recovers or re-renders the transcript for a recording Recall already holds.
  *
  * Usage: node recover-transcript.js <upload-id> ["Meeting title"] [--rerender]
  *
- * --rerender writes the markdown again from the transcript already on the
- * recording. Nothing is created, so it costs nothing and cannot overwrite a
- * recovered transcript with a worse one. Use it after a change to
- * src/transcript.js, or on a call whose transcript was re-created with
- * different diarisation settings – re-running the default path there would
- * request speaker-timeline diarisation again and undo the recovery.
- *
- * The stored title is captured when the meeting is detected, before the
- * platform reports one, so it is almost always "Untitled Meeting" – and
- * sdk_upload is immutable (GET, HEAD, OPTIONS only), so it can't be corrected
- * after the fact. Pass the real title as the second argument to override it.
- *
- * Reads API key from settings.json or RECALL_API_KEY env var.
- * The upload ID can be found via: curl -H "Authorization: Token $KEY" \
- *   "https://eu-central-1.recall.ai/api/v1/sdk_upload/?ordering=-created_at&limit=5"
+ * See docs/recovery.md for which route to take, why the title has to be passed
+ * in, and how to find the upload ID.
  */
 
 const fs = require("node:fs");
@@ -192,8 +179,8 @@ async function waitForTranscript(recordingId) {
   throw new Error("Timed out waiting for transcript");
 }
 
-// Fetches the transcript already attached to the recording. No creation, so
-// whatever diarisation settings produced it are preserved.
+// Creates nothing, so whatever diarisation settings produced the existing
+// transcript are preserved.
 async function fetchExistingTranscript(recordingId) {
   const data = await fetchRecording(recordingId);
   const t = data.media_shortcuts?.transcript;

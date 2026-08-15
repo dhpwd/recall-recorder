@@ -22,10 +22,9 @@ function yamlString(value) {
   return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-// The clock at save time is not the end of the call – saving happens after
-// transcript polling. endTime is recorded when recording-ended fires, and
-// recovery takes it from the recording's completed_at, so the fallback to the
-// last word's offset only applies when neither is available.
+// The clock at save time is not the end of the call, so the caller supplies
+// endTime and the last word's offset is only a fallback – see
+// docs/transcripts.md, "File contract".
 function durationSeconds(metadata, segments) {
   if (metadata.endTime && metadata.startTime) {
     return (metadata.endTime - metadata.startTime) / 1000;
@@ -42,11 +41,8 @@ function durationSeconds(metadata, segments) {
   return last;
 }
 
-// What identifies one speaker from another, which differs by diarisation mode.
-// Speaker-timeline gives platform participant IDs and can repeat a display
-// name across two of them. Machine diarisation gives id: null with a generated
-// name (A, B, C), so there the name is the only discriminator – keying on ID
-// alone would merge every speaker into one.
+// What identifies one speaker from another differs by diarisation mode – see
+// docs/transcripts.md, "Speaker labels".
 function participantKey(segment) {
   const id = segment.participant?.id;
   // Not `id || ...` – participant id 0 is a real ID and falsy.

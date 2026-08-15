@@ -38,7 +38,6 @@ async function init({ onStateChange, settingsLoader }) {
     updateRecordingMetadata(evt.window);
   });
 
-  // recording-started/recording-ended replace the deprecated sdk-state-change.
   // The title is passed because this can fire before handleMeetingDetected has
   // finished, and the tray keeps whatever it already has when given none.
   RecallAiSdk.addEventListener("recording-started", (evt) => {
@@ -54,24 +53,15 @@ async function init({ onStateChange, settingsLoader }) {
     console.log("[recall] All permissions granted");
   });
 
-  // permissions-granted only reports the all-clear, and not necessarily on a
-  // launch where nothing changed. This reports each permission individually –
-  // `granted`, `not_requested` or `denied` – which is what distinguishes "a
-  // permission is missing" from "nothing transitioned this launch".
+  // Diagnostic only – see docs/logging.md, "Checking permissions took effect".
   RecallAiSdk.addEventListener("permission-status", (evt) => {
     console.log(`[recall] Permission ${evt.permission}: ${evt.status}`);
   });
 
   registerDiagnosticListeners();
 
-  // Sequential, matching every example Recall publishes. Firing them at once
-  // races macOS permission dialogs on first launch for no real gain.
-  //
-  // Accessibility is requested here again. It was removed when the System
-  // Settings toggle reset on every launch, but that was never pinned on this
-  // call – SDK 2.0.20 fixed an accessibility dialog appearing unintentionally
-  // on initial install, and the app was pinned three months earlier. If the
-  // toggle stops persisting across restarts, this call is the first suspect.
+  // Sequential, and the accessibility request is deliberate – see
+  // docs/recall-sdk.md, "Permissions".
   try {
     await RecallAiSdk.requestPermission("accessibility");
     console.log("[recall] Accessibility permission requested");
@@ -110,9 +100,8 @@ async function shutdown() {
   }
 }
 
-// These listeners drive no behaviour. They exist so that the failures we've hit
-// before – Teams not auto-stopping, the local mic dropping out mid-call – leave
-// something in the log file to read afterwards.
+// These listeners drive no behaviour; they exist so a failure leaves a cause in
+// the log file – see docs/logging.md, "Diagnosing a failed recording".
 function registerDiagnosticListeners() {
   RecallAiSdk.addEventListener("meeting-closed", (evt) => {
     console.log("[recall] Meeting closed:", JSON.stringify(evt.window));
@@ -137,9 +126,8 @@ function registerDiagnosticListeners() {
     );
   });
 
-  // The SDK's own native-side logs. These never pass through Electron's
-  // console, so rerouting console.* doesn't capture them. Debug maps to
-  // console.debug so the file transport's "info" level filters it out.
+  // The SDK's native-side logs never pass through Electron's console, so
+  // rerouting console.* doesn't capture them – see docs/logging.md.
   RecallAiSdk.addEventListener("log", (evt) => {
     const line = `[recall:${evt.subsystem}/${evt.category}] ${evt.message}`;
     if (evt.level === "error") console.error(line);
@@ -149,9 +137,9 @@ function registerDiagnosticListeners() {
   });
 }
 
-// The window title is null when a meeting is first detected and only arrives
-// later, so without this every transcript is filed as "Untitled Meeting". The
-// first real title wins – a later one is likelier to be a post-call screen.
+// The window title is null at detection and arrives on a later event – see
+// docs/recall-sdk.md, "Window metadata arrives after detection". The first real
+// title wins, since a later one is likelier to be a post-call screen.
 function updateRecordingMetadata(window) {
   if (!currentRecording || !window || window.id !== currentRecording.windowId) {
     return;
@@ -190,9 +178,8 @@ async function handleMeetingDetected(evt) {
         Authorization: `Token ${getApiKey(getSettings())}`,
       },
       body: JSON.stringify({
-        // meeting_title is not a field on sdk_upload – the schema accepts only
-        // recording_config, _1080p and metadata. Sending it at the top level
-        // dropped it, which is why recovery had no title to read back.
+        // The title only survives inside metadata – see docs/recall-api.md,
+        // "Creating the upload".
         metadata: { meeting_title: meetingTitle },
         recording_config: {
           video_mixed_mp4: null,
@@ -220,8 +207,8 @@ async function handleMeetingDetected(evt) {
       windowId: evt.window.id,
       startTime: new Date(),
       meetingTitle,
-      // The SDK reports the platform directly. detectPlatform only guesses from
-      // the title, which is usually null here, so it stays as a fallback.
+      // detectPlatform only guesses from the title, which is usually null at
+      // this point, so it is only a fallback.
       platform: evt.window?.platform || detectPlatform(meetingTitle),
       url: evt.window?.url || null,
     };
@@ -240,7 +227,7 @@ async function handleRecordingEnded() {
   console.log("[recall] Recording ended event received");
   if (!currentRecording) {
     console.log("[recall] No current recording tracked, ignoring");
-    // Reset the tray anyway – sdk-state-change used to cover this case.
+    // Reset the tray anyway – otherwise a stale "Recording" state persists.
     trayCallbacks?.("idle");
     return;
   }
@@ -274,7 +261,6 @@ async function pollForTranscript(uploadId) {
   const maxAttempts = 60;
   const intervalMs = 30000;
 
-  // Phase 1: Wait for the upload to complete and get the recording ID
   let recordingId = null;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const res = await fetch(`${API_BASE}/api/v1/sdk_upload/${uploadId}/`, {
@@ -309,13 +295,11 @@ async function pollForTranscript(uploadId) {
     throw new Error("Timed out waiting for upload to complete");
   }
 
-  // Phase 2: Create the async transcript
   console.log(
     `Upload complete. Creating transcript for recording ${recordingId}...`,
   );
   await createTranscript(recordingId);
 
-  // Phase 3: Poll recording until transcript is ready
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const transcriptData = await fetchTranscript(recordingId);
     if (transcriptData) {
@@ -340,11 +324,10 @@ async function createTranscript(recordingId) {
       body: JSON.stringify({
         provider: {
           assembly_ai_async: {
-            // universal-3-pro is no longer in AssemblyAI's model list.
-            // universal-3-5-pro is the current recommendation; universal-2 is
-            // the documented fallback for languages 3.5 Pro doesn't cover.
-            // Recall doesn't validate these – the list passes straight to
-            // AssemblyAI, so a wrong string fails the transcript, not the call.
+            // universal-2 is the fallback for languages universal-3-5-pro
+            // doesn't cover. Recall doesn't validate either name – a wrong
+            // string fails the transcript, not the call. See
+            // docs/recall-api.md, "Transcript provider options".
             speech_models: ["universal-3-5-pro", "universal-2"],
             language_code: "en_uk",
             keyterms_prompt: buildKeyterms(getSettings()),

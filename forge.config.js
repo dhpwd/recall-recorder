@@ -18,21 +18,12 @@ module.exports = {
       NSAudioCaptureUsageDescription:
         "Recall Recorder captures system audio from video calls to produce meeting transcripts.",
     },
+    // A real certificate, identityValidation, entitlements via optionsForFile
+    // and continueOnError are each required, and each produces a build that
+    // reports success without them – see docs/patterns/code-signing.md.
     osxSign: {
-      // A real certificate, not ad-hoc signing. Ad-hoc has no certificate, so
-      // the designated requirement falls back to the binary's cdhash and every
-      // rebuild invalidates every macOS permission grant. Any certificate –
-      // self-signed or Developer ID – pins the requirement to itself instead.
       identity: SIGNING_IDENTITY,
-      // Required: osx-sign otherwise resolves the identity through
-      // `security find-identity -v`, which lists only trusted identities and so
-      // never returns a self-signed one. It throws, and @electron/packager
-      // swallows that (continueOnError defaults to true), emitting an unsigned
-      // app from a build that reports success.
       identityValidation: false,
-      // Entitlements are only read from optionsForFile. A top-level
-      // `entitlements` key – and the old `entitlements-inherit` – are silently
-      // ignored, so entitlements.plist was never reaching codesign via Forge.
       optionsForFile: () => ({
         entitlements: "./entitlements.plist",
         // Off to match what the manual codesign step produced. Turn on together
@@ -85,18 +76,13 @@ module.exports = {
         },
       },
     },
-    // Fuses are used to enable/disable various Electron functionality
-    // at package time, before code signing the application
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,
-      // Off deliberately. On, Chromium encrypts its cookie store with a key in
-      // the login keychain, and the keychain ACL does not survive a rebuild
-      // even with a stable signing certificate – so every build prompts for the
-      // keychain password on first launch. There is nothing to protect: the
-      // only window loads local content and holds no cookies, and the API key
-      // is already stored as plain JSON in settings.json. Revisit if a window
-      // ever authenticates against a remote service.
+      // Off deliberately – on, every build prompts for the keychain password on
+      // first launch, and nothing here needs protecting. See
+      // docs/patterns/code-signing.md, "Keychain items do not behave like TCC
+      // grants".
       [FuseV1Options.EnableCookieEncryption]: false,
       [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
       [FuseV1Options.EnableNodeCliInspectArguments]: false,

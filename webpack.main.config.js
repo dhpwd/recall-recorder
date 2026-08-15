@@ -24,11 +24,9 @@ function chmodRecursive(dir, fileMode) {
   }
 }
 
-// Frameworks is copied here rather than by copy-webpack-plugin because that
-// dereferences symlinks. GStreamer.framework ships the canonical framework
-// layout (GStreamer -> Versions/Current/GStreamer and the same for Libraries
-// and Resources); flattening those into real files duplicates the payload and
-// leaves a directory codesign rejects as "bundle format is ambiguous".
+// Copied here rather than by copy-webpack-plugin, which dereferences the
+// framework's symlinks – see docs/patterns/native-payload-packaging.md, "Copy
+// frameworks with symlinks intact".
 class CopyFrameworksPlugin {
   apply(compiler) {
     compiler.hooks.afterEmit.tapAsync(
@@ -37,8 +35,8 @@ class CopyFrameworksPlugin {
         try {
           const dest = path.join(compiler.outputPath, "Frameworks");
           // Skipped when already present so watch-mode rebuilds don't repeat a
-          // ~140MB copy. `make` starts from a clean output directory, so a
-          // stale copy can only survive within a single dev session.
+          // ~140MB copy – see docs/patterns/native-payload-packaging.md for the
+          // stale-frameworks trade-off that buys.
           if (fs.existsSync(dest)) {
             callback();
             return;
