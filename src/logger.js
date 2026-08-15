@@ -1,16 +1,11 @@
 const log = require("electron-log/main");
 
-// preload is off because nothing in the renderer calls electron-log directly,
-// and leaving it on makes electron-log write a generated preload script into
-// userData at runtime.
+// preload is off deliberately – see docs/logging.md, "What reaches the file".
 log.initialize({ preload: false, spyRendererConsole: true });
 log.transports.file.level = "info";
 log.transports.file.maxSize = 5 * 1024 * 1024;
 
-// Uncaught exceptions and unhandled rejections would otherwise leave no trace –
-// recall.init() and the transcript polling loop both run outside any try block.
-// No dialog: this is a tray app that runs during calls, and the tray already
-// notifies on error.
+// No dialog: the app runs during calls and the tray already notifies on error.
 log.errorHandler.startCatching({ showDialog: false });
 
 // Must come after the require above – electron-log's console transport captures

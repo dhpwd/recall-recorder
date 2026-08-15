@@ -26,8 +26,8 @@ module.exports = {
       identityValidation: false,
       optionsForFile: () => ({
         entitlements: "./entitlements.plist",
-        // Off to match what the manual codesign step produced. Turn on together
-        // with a real signing identity if the app is ever notarised.
+        // Off deliberately – it pairs with notarisation. See
+        // docs/patterns/code-signing.md.
         hardenedRuntime: false,
       }),
       continueOnError: false,

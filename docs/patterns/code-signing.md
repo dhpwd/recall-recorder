@@ -30,6 +30,8 @@ Each of these is required, and omitting any of them produces a build that report
 
 `package.json` overrides `@electron/osx-sign` with Recall's fork, which parallelises signing for speed and makes no difference to correctness.
 
+`hardenedRuntime` is off, matching what the manual `codesign` step produced before Forge took the signing over. It buys nothing on a machine that builds its own app, and it is only a requirement for notarisation, which needs a Developer ID certificate – turn the two on together or neither. Three of the five keys in `entitlements.plist` are the exceptions a hardened runtime would need (`cs.allow-jit`, `cs.allow-unsigned-executable-memory`, `cs.disable-library-validation`), so they sit inert today and are already in place for that switch.
+
 The designated requirement names the bundle identifier `com.fidero.recall-recorder` and the certificate, and needs both to match, so changing either invalidates every grant. Keep the identifier stable. On its own it binds nothing – an ad-hoc build carries the same identifier and still breaks on every rebuild.
 
 **Anti-pattern:** trusting the build's exit status. Verify the signature after packaging – CLAUDE.md's full verify has the commands. Anything that suppresses a signing failure puts the manual `codesign` step back.

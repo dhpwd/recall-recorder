@@ -99,8 +99,8 @@ app.on("before-quit", (e) => {
     mainWindow.close();
   }
 
-  // Defer the quit once so the SDK can stop its native subprocess itself.
-  // recall.shutdown() is bounded, and finally() means a failure still quits.
+  // Deferred once so the SDK can stop its native subprocess itself, and the
+  // quit proceeds either way – see docs/recall-sdk.md, "Quitting".
   if (sdkShutdownStarted) return;
   sdkShutdownStarted = true;
   e.preventDefault();

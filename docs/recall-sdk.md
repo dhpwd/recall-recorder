@@ -8,6 +8,12 @@
 
 When `stopRecording` fails, `src/recall.js` falls back to `RecallAiSdk.shutdown()` followed by a re-init. That kills the native subprocess, which is drastic, but it beats an app stuck in a state it cannot leave. The fallback leaves `currentRecording` set, because no `recording-ended` follows it – so the tray stays on "Recording" and the transcript is never polled. DHP-3 covers that.
 
+## Quitting
+
+The SDK registers its own `process.on("exit")` handler, which force-kills the native subprocess. So `before-quit` in `src/main.js` defers the quit once and calls `recall.shutdown()` first, giving the SDK the chance to stop the subprocess itself rather than having it killed from under an upload.
+
+That shutdown is bounded at 5 seconds and the quit proceeds either way, because a shutdown that never resolves would leave an app that cannot be quit – worse than the force-kill it avoids.
+
 ## Events
 
 | Event                  | When                                    | Notes                                                                          |
@@ -33,6 +39,8 @@ The SDK stops recording by itself when it detects the meeting ended, so `meeting
 ## Window metadata arrives after detection
 
 `meeting-detected` fires with `title: null`, and the title appears later on `meeting-updated` or `meeting-closed`. Anything read at detection time therefore records "Untitled Meeting". `updateRecordingMetadata` in `src/recall.js` fills it in from whichever event carries it first and keeps that first real title, because a later one is likelier to be a post-call screen.
+
+The events can also outrun the recording object. `currentRecording` is only assigned once the upload POST and `startRecording` have both resolved, so a `meeting-updated` carrying the title can arrive while neither exists yet. `src/recall.js` therefore keeps the last window it saw regardless of recording state and replays it once the recording object exists. Dropping it while there is nothing to update would file exactly the "Untitled Meeting" the mechanism prevents.
 
 `evt.window` also carries `platform` and `url` directly, and those are authoritative. `detectPlatform` only string-matches the title, so with the title null it always returned `unknown` – it is now only a fallback.
 

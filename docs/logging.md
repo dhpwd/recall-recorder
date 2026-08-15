@@ -5,8 +5,8 @@
 ## What reaches the file
 
 - Every `console.*` call in the main process, via `Object.assign(console, log.functions)`. This must come after `require("electron-log/main")` – the console transport captures the original console methods when it loads, and reversing the two lines makes every log call recurse
-- Uncaught exceptions and unhandled rejections, via `log.errorHandler.startCatching({ showDialog: false })`. No dialog, because the app runs during calls and the tray already notifies on error
-- The preferences window's console, via `spyRendererConsole: true`
+- Uncaught exceptions and unhandled rejections, via `log.errorHandler.startCatching({ showDialog: false })`. This is the only thing covering `recall.init()` and the transcript polling loop, neither of which runs inside a `try` block, so without it a throw from either leaves no trace at all. No dialog, because the app runs during calls and the tray already notifies on error
+- The preferences window's console, via `spyRendererConsole: true`. `initialize`'s other option, `preload`, is off: nothing in the renderer calls electron-log directly, and leaving it on makes electron-log write a generated preload script into `userData` at runtime
 - The SDK's own native-side logs, via the `log` SDK event. These never pass through Electron's console, so rerouting `console.*` does not reach them. Level `debug` maps to `console.debug`, which the file transport's `info` level filters out – raise the level to see it
 
 ## Checking permissions took effect

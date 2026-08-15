@@ -29,10 +29,9 @@ async function init({ onStateChange, settingsLoader }) {
   RecallAiSdk.addEventListener("meeting-detected", handleMeetingDetected);
   RecallAiSdk.addEventListener("recording-ended", handleRecordingEnded);
 
-  // latestWindow is kept regardless of recording state: meeting-updated can
-  // arrive before currentRecording exists, since that is only assigned after
-  // the upload POST and startRecording have both resolved. Dropping it there
-  // would leave exactly the "Untitled Meeting" this is meant to prevent.
+  // Kept regardless of recording state, because this can arrive before
+  // currentRecording exists – see docs/recall-sdk.md, "Window metadata arrives
+  // after detection".
   RecallAiSdk.addEventListener("meeting-updated", (evt) => {
     latestWindow = evt.window;
     updateRecordingMetadata(evt.window);
@@ -76,9 +75,8 @@ async function init({ onStateChange, settingsLoader }) {
 
 const SHUTDOWN_TIMEOUT_MS = 5000;
 
-// Without this the SDK's own process.on("exit") handler force-kills the native
-// subprocess on every quit. Bounded, because a shutdown that never resolves
-// would leave an app that can't be quit – worse than the force-kill it avoids.
+// Bounded, so a shutdown that never resolves can't leave an app that won't
+// quit – see docs/recall-sdk.md, "Quitting".
 async function shutdown() {
   let timer;
   try {
@@ -324,10 +322,9 @@ async function createTranscript(recordingId) {
       body: JSON.stringify({
         provider: {
           assembly_ai_async: {
-            // universal-2 is the fallback for languages universal-3-5-pro
-            // doesn't cover. Recall doesn't validate either name – a wrong
-            // string fails the transcript, not the call. See
-            // docs/recall-api.md, "Transcript provider options".
+            // Recall doesn't validate these – a wrong string fails the
+            // transcript, not the call. See docs/recall-api.md, "Transcript
+            // provider options".
             speech_models: ["universal-3-5-pro", "universal-2"],
             language_code: "en_uk",
             keyterms_prompt: buildKeyterms(getSettings()),
